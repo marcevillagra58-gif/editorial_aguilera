@@ -1,6 +1,6 @@
 // src/pages/BookDetailPage.jsx — Aura — Fase 2
-import { useState } from 'react';
-import { books, formatPrecio } from '../data/books';
+import { useState, useEffect } from 'react';
+import { formatPrecio } from '../data/books';
 import { useCart } from '../context/CartContext';
 import BookCard from '../components/BookCard';
 import './BookDetailPage.css';
@@ -9,6 +9,16 @@ export default function BookDetailPage({ book, onNavigate }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
+  const [related, setRelated] = useState([]);
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/books?materia=${book.materia}`)
+      .then(res => res.json())
+      .then(data => {
+        setRelated(data.filter(b => b.id !== book.id).slice(0, 4));
+      })
+      .catch(err => console.error('Error fetching related books:', err));
+  }, [book.materia, book.id]);
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) addItem(book);
@@ -19,10 +29,6 @@ export default function BookDetailPage({ book, onNavigate }) {
   const descuento = book.precioAnterior
     ? Math.round((1 - book.precio / book.precioAnterior) * 100)
     : null;
-
-  const related = books
-    .filter(b => b.materia === book.materia && b.id !== book.id)
-    .slice(0, 4);
 
   return (
     <main id="main-content" className="book-detail-page">

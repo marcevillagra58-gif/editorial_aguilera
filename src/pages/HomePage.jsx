@@ -1,12 +1,27 @@
 // src/pages/HomePage.jsx — Aura — Fase 2
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
-import { books, categorias, formatPrecio } from '../data/books';
+import { categorias, formatPrecio } from '../data/books';
 import BookCard from '../components/BookCard';
 import './HomePage.css';
 
 export default function HomePage({ onNavigate }) {
   const [activeTab, setActiveTab] = useState('novedades');
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/books')
+      .then(res => res.json())
+      .then(data => {
+        setBooks(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching books:', err);
+        setLoading(false);
+      });
+  }, []);
 
   const novedades = books.filter(b => b.novedad).slice(0, 6);
   const masVendidos = books.filter(b => b.masVendido).slice(0, 6);

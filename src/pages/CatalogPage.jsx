@@ -1,6 +1,6 @@
 // src/pages/CatalogPage.jsx — Aura — Fase 2
-import { useState, useMemo } from 'react';
-import { books, categorias, formatPrecio } from '../data/books';
+import { useState, useMemo, useEffect } from 'react';
+import { categorias, formatPrecio } from '../data/books';
 import BookCard from '../components/BookCard';
 import './CatalogPage.css';
 
@@ -19,6 +19,22 @@ export default function CatalogPage({ onNavigate, initialFilter }) {
   const [soloNovedades, setSoloNovedades] = useState(initialFilter === 'novedades');
   const [soloMasVendidos, setSoloMasVendidos] = useState(initialFilter === 'masVendido');
   const [soloOfertas, setSoloOfertas] = useState(false);
+  
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/books')
+      .then(res => res.json())
+      .then(data => {
+        setBooks(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching books:', err);
+        setLoading(false);
+      });
+  }, []);
 
   const filtered = useMemo(() => {
     let result = [...books];

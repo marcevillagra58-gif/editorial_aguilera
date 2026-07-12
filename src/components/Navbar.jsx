@@ -1,7 +1,7 @@
 // src/components/Navbar.jsx — Aura — Fase 2
 import { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import { books, formatPrecio } from '../data/books';
+import { formatPrecio } from '../data/books';
 import './Navbar.css';
 
 const MATERIAS = {
@@ -34,6 +34,14 @@ export default function Navbar({ onNavigate, currentPage }) {
   const [results, setResults] = useState([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const searchRef = useRef(null);
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/books')
+      .then(res => res.json())
+      .then(data => setBooks(data))
+      .catch(err => console.error(err));
+  }, []);
 
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); return; }
@@ -46,7 +54,7 @@ export default function Navbar({ onNavigate, currentPage }) {
       )
       .slice(0, 5);
     setResults(filtered);
-  }, [query]);
+  }, [query, books]);
 
   // Close dropdown on outside click
   useEffect(() => {
