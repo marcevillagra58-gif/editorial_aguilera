@@ -12,7 +12,7 @@ export default function BookDetailPage({ book, onNavigate }) {
   const [related, setRelated] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/books?materia=${book.materia}`)
+    fetch(`/api/books?materia=${book.materia}`)
       .then(res => res.json())
       .then(data => {
         setRelated(data.filter(b => b.id !== book.id).slice(0, 4));

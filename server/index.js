@@ -20,10 +20,15 @@ app.use('/api/books', bookRoutes);
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-    });
+    // Only listen if not on Vercel (Vercel sets VERCEL=1)
+    if (!process.env.VERCEL) {
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+      });
+    }
   })
   .catch((error) => {
     console.error('❌ Error connecting to MongoDB:', error.message);
   });
+
+export default app;
