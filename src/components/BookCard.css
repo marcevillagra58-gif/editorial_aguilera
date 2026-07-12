@@ -1,0 +1,170 @@
+/* BookCard.css — Aura — Fase 2 */
+
+.book-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gray-100);
+}
+
+.book-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--gray-200);
+}
+
+/* Badges */
+.book-card__badges {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Cover */
+.book-card__cover-wrap {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3/4;
+  background: var(--gray-100);
+}
+
+.book-card__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.book-card:hover .book-card__cover {
+  transform: scale(1.05);
+}
+
+/* Hover overlay */
+.book-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,27,53,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  backdrop-filter: blur(2px);
+}
+
+.book-card:hover .book-card__overlay {
+  opacity: 1;
+}
+
+.book-card__overlay-btn {
+  background: var(--gold-500);
+  color: var(--navy-900);
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  transform: translateY(10px);
+  transition: all var(--transition-base);
+  font-family: var(--font-body);
+}
+
+.book-card:hover .book-card__overlay-btn {
+  transform: translateY(0);
+}
+
+.book-card__overlay-btn:hover {
+  background: var(--gold-400);
+}
+
+/* Body */
+.book-card__body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.book-card__materia {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--gold-700);
+}
+
+.book-card__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--navy-800);
+  line-height: 1.3;
+  font-family: var(--font-display);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.book-card__autor {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  font-style: italic;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-card__edicion {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+}
+
+/* Price */
+.book-card__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.book-card__price-old {
+  font-size: 0.78rem;
+  color: var(--gray-400);
+  text-decoration: line-through;
+}
+
+.book-card__price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--navy-800);
+  font-family: var(--font-display);
+}
+
+/* Cart button */
+.book-card__body .btn-cart {
+  margin-top: auto;
+  padding-top: var(--space-md);
+}
+
+.btn-cart--added {
+  background: var(--success) !important;
+  color: var(--white) !important;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .book-card__title { font-size: 0.85rem; }
+  .book-card__price { font-size: 1rem; }
+}
