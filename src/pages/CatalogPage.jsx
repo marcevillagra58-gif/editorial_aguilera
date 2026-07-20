@@ -27,7 +27,12 @@ export default function CatalogPage({ onNavigate, initialFilter }) {
     fetch('/api/books')
       .then(res => res.json())
       .then(data => {
-        setBooks(data);
+        if (Array.isArray(data)) {
+          setBooks(data);
+        } else {
+          console.error('API did not return an array:', data);
+          setBooks([]);
+        }
         setLoading(false);
       })
       .catch(err => {

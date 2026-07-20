@@ -15,7 +15,11 @@ export default function BookDetailPage({ book, onNavigate }) {
     fetch(`/api/books?materia=${book.materia}`)
       .then(res => res.json())
       .then(data => {
-        setRelated(data.filter(b => b.id !== book.id).slice(0, 4));
+        if (Array.isArray(data)) {
+          setRelated(data.filter(b => b.id !== book.id).slice(0, 4));
+        } else {
+          setRelated([]);
+        }
       })
       .catch(err => console.error('Error fetching related books:', err));
   }, [book.materia, book.id]);

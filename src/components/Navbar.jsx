@@ -39,7 +39,10 @@ export default function Navbar({ onNavigate, currentPage }) {
   useEffect(() => {
     fetch('/api/books')
       .then(res => res.json())
-      .then(data => setBooks(data))
+      .then(data => {
+        if (Array.isArray(data)) setBooks(data);
+        else setBooks([]);
+      })
       .catch(err => console.error(err));
   }, []);
 

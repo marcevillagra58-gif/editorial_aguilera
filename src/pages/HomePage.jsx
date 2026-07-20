@@ -14,7 +14,12 @@ export default function HomePage({ onNavigate }) {
     fetch('/api/books')
       .then(res => res.json())
       .then(data => {
-        setBooks(data);
+        if (Array.isArray(data)) {
+          setBooks(data);
+        } else {
+          console.error('API did not return an array:', data);
+          setBooks([]);
+        }
         setLoading(false);
       })
       .catch(err => {
