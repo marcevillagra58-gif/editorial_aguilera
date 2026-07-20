@@ -11,11 +11,20 @@ import BookDetailPage from './pages/BookDetailPage';
 import AdminPage from './pages/AdminPage';
 import './App.css';
 
+function getInitialPage() {
+  const path = window.location.pathname;
+  if (path === '/admin' || path.endsWith('/admin')) return { name: 'admin', params: {} };
+  return { name: 'home', params: {} };
+}
+
 function AppContent() {
-  const [page, setPage] = useState({ name: 'home', params: {} });
+  const [page, setPage] = useState(getInitialPage);
 
   const navigate = useCallback((name, params = {}) => {
     setPage({ name, params });
+    // Update URL without page reload
+    const urlMap = { home: '/', catalog: '/catalog', admin: '/admin' };
+    window.history.pushState({}, '', urlMap[name] || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
