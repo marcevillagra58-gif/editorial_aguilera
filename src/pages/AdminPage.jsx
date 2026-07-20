@@ -11,7 +11,7 @@ const EMPTY_FORM = {
   isbn: '', novedad: false, masVendido: false, descripcion: '', portada: '', slug: ''
 };
 
-export default function AdminPage() {
+export default function AdminPage({ onNavigate }) {
   const [authed, setAuthed]   = useState(false);
   const [pass, setPass]       = useState('');
   const [error, setError]     = useState('');
@@ -23,9 +23,26 @@ export default function AdminPage() {
   const [preview, setPreview] = useState('');
   const [msg, setMsg]         = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [exitModal, setExitModal] = useState(null); // { dest, params }
   const fileRef = useRef();
 
   const headers = { 'Content-Type': 'application/json', 'x-admin-password': pass };
+
+  // Protección al cerrar/recargar la pestaña
+  useEffect(() => {
+    if (!authed) return;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [authed]);
+
+  // Intercepta la navegación con confirmación elegante
+  const safeNavigate = (dest, params = {}) => {
+    setExitModal({ dest, params });
+  };
 
   const loadBooks = async () => {
     const res = await fetch('/api/books');
@@ -147,7 +164,12 @@ export default function AdminPage() {
     <div className="admin-page">
       <header className="admin-header">
         <h1>⚙ Panel de Administrador</h1>
-        <span>{books.length} libros en catálogo</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <span>{books.length} libros en catálogo</span>
+          <button className="btn-exit-header" onClick={() => safeNavigate('home')}>
+            ← Volver al sitio
+          </button>
+        </div>
       </header>
 
       {msg && <div className="admin-msg">{msg}</div>}
@@ -298,6 +320,34 @@ export default function AdminPage() {
           </tbody>
         </table>
       </section>
+
+      {/* Modal de confirmación de salida */}
+      {exitModal && (
+        <div className="exit-modal-overlay">
+          <div className="exit-modal">
+            <div className="exit-modal__icon">⚠️</div>
+            <h2>¿Salir del panel de administración?</h2>
+            <p>Si salís ahora perderás tu sesión activa y deberás volver a ingresar la contraseña la próxima vez.</p>
+            <div className="exit-modal__actions">
+              <button
+                className="exit-modal__btn-stay"
+                onClick={() => setExitModal(null)}
+              >
+                Quedarme en el panel
+              </button>
+              <button
+                className="exit-modal__btn-leave"
+                onClick={() => {
+                  setExitModal(null);
+                  if (onNavigate) onNavigate(exitModal.dest, exitModal.params);
+                }}
+              >
+                Sí, salir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -47,7 +47,7 @@ function AppContent() {
       case 'contact':
         return <ContactPage onNavigate={navigate} />;
       case 'admin':
-        return <AdminPage />;
+        return <AdminPage onNavigate={navigate} />;
       default:
         return <HomePage onNavigate={navigate} />;
     }
@@ -56,12 +56,12 @@ function AppContent() {
   return (
     <div className="app">
       <a href="#main-content" className="skip-link">Ir al contenido principal</a>
-      <Navbar onNavigate={navigate} currentPage={page.name} />
-      <CartSidebar onNavigate={navigate} />
+      {page.name !== 'admin' && <Navbar onNavigate={navigate} currentPage={page.name} />}
+      {page.name !== 'admin' && <CartSidebar onNavigate={navigate} />}
       <div className="app__content">
         {renderPage()}
       </div>
-      <Footer onNavigate={navigate} />
+      {page.name !== 'admin' && <Footer onNavigate={navigate} />}
     </div>
   );
 }

@@ -73,6 +73,17 @@
 }
 .admin-header h1 { color: #c9a84c; font-size: 1.4rem; margin: 0; }
 .admin-header span { color: #888; font-size: 0.9rem; }
+.btn-exit-header {
+  padding: 8px 16px;
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.btn-exit-header:hover { color: #fff; border-color: #888; }
 
 .admin-msg {
   padding: 14px 20px;
@@ -208,3 +219,78 @@ textarea.admin-input { resize: vertical; }
 .btn-delete:hover { background: #3a1a1a; }
 .btn-confirm-delete { padding: 6px 12px; background: #8b1a1a; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
 .btn-cancel-delete { padding: 6px 12px; background: transparent; color: #888; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+
+/* ── Exit Confirmation Modal ── */
+.exit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.exit-modal {
+  background: #1a1a2e;
+  border: 1px solid #3a2a10;
+  border-radius: 20px;
+  padding: 48px 44px;
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.exit-modal__icon { font-size: 2.5rem; margin-bottom: 16px; }
+
+.exit-modal h2 {
+  color: #e0c070;
+  font-size: 1.25rem;
+  margin: 0 0 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.exit-modal p {
+  color: #999;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 32px;
+}
+
+.exit-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exit-modal__btn-stay {
+  padding: 14px 24px;
+  background: #c9a84c;
+  color: #0d0d0d;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.exit-modal__btn-stay:hover { background: #e0bf70; transform: translateY(-1px); }
+
+.exit-modal__btn-leave {
+  padding: 12px 24px;
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.exit-modal__btn-leave:hover { color: #ccc; border-color: #777; }
