@@ -1,0 +1,210 @@
+/* src/pages/AdminPage.css */
+
+/* ── Login ── */
+.admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0d0d;
+}
+.admin-login__card {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 360px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.admin-login__card h1 {
+  color: #c9a84c;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+.admin-login__card p {
+  color: #888;
+  margin-bottom: 28px;
+  font-size: 0.9rem;
+}
+.admin-login__card input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+.admin-login__card button {
+  width: 100%;
+  padding: 14px;
+  background: #c9a84c;
+  color: #0d0d0d;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.admin-login__card button:hover { background: #e0bf70; }
+.admin-error { color: #ff6b6b; font-size: 0.85rem; margin: -4px 0 8px; }
+
+/* ── Page Layout ── */
+.admin-page {
+  min-height: 100vh;
+  background: #0d0d0d;
+  color: #e0e0e0;
+  padding: 24px;
+  font-family: 'Inter', sans-serif;
+}
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #1a1a2e;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid #2a2a4a;
+}
+.admin-header h1 { color: #c9a84c; font-size: 1.4rem; margin: 0; }
+.admin-header span { color: #888; font-size: 0.9rem; }
+
+.admin-msg {
+  padding: 14px 20px;
+  background: #1e2d1e;
+  border: 1px solid #3a5a3a;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  color: #8eff8e;
+}
+
+/* ── Form Section ── */
+.admin-form-section {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 32px;
+}
+.admin-form-section h2 { color: #c9a84c; margin-top: 0; margin-bottom: 24px; font-size: 1.1rem; }
+
+.admin-form__grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+}
+@media (max-width: 700px) { .admin-form__grid { grid-template-columns: 1fr; } }
+
+.cover-preview {
+  width: 100%;
+  aspect-ratio: 5/7;
+  border: 2px dashed #444;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  color: #888;
+  font-size: 0.85rem;
+  text-align: center;
+  background: #111;
+  transition: border-color 0.2s;
+}
+.cover-preview:hover { border-color: #c9a84c; }
+.cover-preview img { width: 100%; height: 100%; object-fit: cover; }
+.cover-uploading {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  color: #c9a84c; font-weight: 700;
+}
+
+.admin-form__fields { display: flex; flex-direction: column; gap: 12px; }
+.admin-form__fields label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: #aaa; }
+.admin-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.admin-input {
+  background: #0d0d0d;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.admin-input:focus { outline: none; border-color: #c9a84c; }
+textarea.admin-input { resize: vertical; }
+
+.admin-form__checks { display: flex; gap: 24px; align-items: center; }
+.admin-form__checks label { flex-direction: row; align-items: center; gap: 8px; font-size: 0.9rem; color: #ccc; cursor: pointer; }
+
+.admin-form__actions { display: flex; gap: 12px; margin-top: 20px; }
+.btn-save {
+  padding: 12px 28px;
+  background: #c9a84c;
+  color: #0d0d0d;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-save:hover { background: #e0bf70; }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-cancel {
+  padding: 12px 20px;
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cancel:hover { color: #fff; border-color: #888; }
+
+/* ── Table ── */
+.admin-list-section {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 16px;
+  padding: 28px;
+}
+.admin-list-section h2 { color: #c9a84c; margin-top: 0; margin-bottom: 20px; font-size: 1.1rem; }
+
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.admin-table th {
+  text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid #2a2a4a;
+  color: #888; font-weight: 600; text-transform: uppercase; font-size: 0.75rem;
+}
+.admin-table td { padding: 12px 14px; border-bottom: 1px solid #1e1e30; vertical-align: middle; }
+.admin-table tr:hover td { background: #12122a; }
+.admin-table tr.editing td { background: #1e1e10; }
+
+.admin-thumb { width: 40px; height: 56px; object-fit: cover; border-radius: 4px; }
+.no-img { color: #555; font-size: 0.75rem; }
+
+.badge-materia {
+  background: #1e2d1e; color: #8eff8e;
+  border-radius: 4px; padding: 2px 8px;
+  font-size: 0.75rem; text-transform: capitalize;
+}
+
+.admin-actions { display: flex; gap: 8px; }
+.btn-edit { padding: 6px 12px; background: #1e2a1e; color: #8eff8e; border: 1px solid #3a5a3a; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.btn-edit:hover { background: #3a5a3a; }
+.btn-delete { padding: 6px 10px; background: transparent; color: #ff6b6b; border: 1px solid #5a2a2a; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+.btn-delete:hover { background: #3a1a1a; }
+.btn-confirm-delete { padding: 6px 12px; background: #8b1a1a; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
+.btn-cancel-delete { padding: 6px 12px; background: transparent; color: #888; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }

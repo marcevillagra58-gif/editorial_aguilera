@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
 import BookDetailPage from './pages/BookDetailPage';
+import AdminPage from './pages/AdminPage';
 import './App.css';
 
 function AppContent() {
@@ -36,6 +37,8 @@ function AppContent() {
           : <HomePage onNavigate={navigate} />;
       case 'contact':
         return <ContactPage onNavigate={navigate} />;
+      case 'admin':
+        return <AdminPage />;
       default:
         return <HomePage onNavigate={navigate} />;
     }

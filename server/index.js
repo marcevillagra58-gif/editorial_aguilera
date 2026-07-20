@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import bookRoutes from './routes/books.js';
+import uploadRoutes from './routes/upload.js';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/books', bookRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
