@@ -47,6 +47,8 @@
 .navbar__topbar-right a {
   color: rgba(255,255,255,0.6);
   transition: color var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
 }
 
 .navbar__topbar-right a:hover {
