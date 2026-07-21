@@ -88,7 +88,7 @@ export default function Navbar({ onNavigate, currentPage }) {
               <span>📦 Despacho en 24/48 hs</span>
             </div>
             <div className="navbar__topbar-right">
-              <a href="tel:+541100000000">📞 (011) XXXX-XXXX</a>
+              <a href="tel:+5491156151265">📞 +54 9 11-5615-1265</a>
               <a href="mailto:tienda@editorialaguilera.com.ar">✉ Contacto</a>
             </div>
           </div>

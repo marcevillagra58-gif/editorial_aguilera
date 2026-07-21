@@ -9,6 +9,9 @@ export default function HomePage({ onNavigate }) {
   const [activeTab, setActiveTab] = useState('novedades');
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [newsEmail, setNewsEmail] = useState('');
+  const [newsStatus, setNewsStatus] = useState(null); // null | 'loading' | 'ok' | 'error' | 'exists'
+  const [newsMsg, setNewsMsg] = useState('');
 
   useEffect(() => {
     fetch('/api/books')
@@ -27,6 +30,34 @@ export default function HomePage({ onNavigate }) {
         setLoading(false);
       });
   }, []);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!newsEmail) return;
+    setNewsStatus('loading');
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsEmail }),
+      });
+      const data = await res.json();
+      if (res.status === 201 || res.ok) {
+        setNewsStatus('ok');
+        setNewsMsg(data.message || '¡Te suscribiste con éxito!');
+        setNewsEmail('');
+      } else if (res.status === 409) {
+        setNewsStatus('exists');
+        setNewsMsg('Este email ya está registrado.');
+      } else {
+        setNewsStatus('error');
+        setNewsMsg('Ocurrió un error. Intentá de nuevo.');
+      }
+    } catch {
+      setNewsStatus('error');
+      setNewsMsg('No se pudo conectar. Intentá más tarde.');
+    }
+  };
 
   const novedades = books.filter(b => b.novedad).slice(0, 6);
   const masVendidos = books.filter(b => b.masVendido).slice(0, 6);
@@ -268,24 +299,39 @@ export default function HomePage({ onNavigate }) {
             </div>
             <form
               className="newsletter__form"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubscribe}
               aria-label="Formulario de suscripción al newsletter"
             >
-              <input
-                id="newsletter-email-input"
-                type="email"
-                className="newsletter__input"
-                placeholder="Tu correo electrónico"
-                aria-label="Ingresá tu correo electrónico"
-                required
-              />
-              <button
-                id="newsletter-submit-btn"
-                type="submit"
-                className="btn btn-primary"
-              >
-                Suscribirme
-              </button>
+              {newsStatus === 'ok' ? (
+                <div className="newsletter__success">
+                  🎉 {newsMsg}
+                </div>
+              ) : (
+                <>
+                  <input
+                    id="newsletter-email-input"
+                    type="email"
+                    className="newsletter__input"
+                    placeholder="Tu correo electrónico"
+                    aria-label="Ingresá tu correo electrónico"
+                    value={newsEmail}
+                    onChange={e => { setNewsEmail(e.target.value); setNewsStatus(null); }}
+                    required
+                    disabled={newsStatus === 'loading'}
+                  />
+                  <button
+                    id="newsletter-submit-btn"
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={newsStatus === 'loading'}
+                  >
+                    {newsStatus === 'loading' ? 'Enviando...' : 'Suscribirme'}
+                  </button>
+                </>
+              )}
+              {(newsStatus === 'error' || newsStatus === 'exists') && (
+                <p className="newsletter__error">{newsMsg}</p>
+              )}
             </form>
           </div>
         </div>
