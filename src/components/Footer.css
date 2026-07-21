@@ -49,8 +49,9 @@
 
 .footer__grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2.2fr 1fr 1fr;
   gap: var(--space-3xl);
+  align-items: start;
 }
 
 /* Brand */
@@ -60,14 +61,21 @@
   gap: var(--space-xs);
 }
 
+.footer__brand-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-md);
+}
+
 .footer__logo {
-  height: 90px;
+  height: 110px;
   width: auto;
   opacity: 0.95;
   border-radius: var(--radius-sm);
-  align-self: flex-start; /* Prevent flex stretching */
   object-fit: contain;
   mix-blend-mode: screen; /* To make a black background transparent */
+  margin-bottom: -12px;
 }
 
 .footer__tagline {
