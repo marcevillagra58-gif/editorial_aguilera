@@ -54,7 +54,7 @@ export default function Footer({ onNavigate }) {
                   </svg>
                 </a>
                 <a
-                  href="https://api.whatsapp.com/send?phone=5491100000000&text=Hola! Quería consultar sobre un libro."
+                  href="https://api.whatsapp.com/send?phone=5491156151265&text=Hola! Quería consultar sobre un libro."
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="WhatsApp Editorial Aguilera"
@@ -104,8 +104,8 @@ export default function Footer({ onNavigate }) {
                     <button className="footer__link" onClick={() => onNavigate('contact')}>Contacto</button>
                   </li>
                   <li>
-                    <a href="tel:+541100000000" className="footer__link footer__link--contact">
-                      📞 (011) XXXX-XXXX
+                    <a href="tel:+5491156151265" className="footer__link footer__link--contact">
+                      📞 +54 9 11-5615-1265
                     </a>
                   </li>
                   <li>
