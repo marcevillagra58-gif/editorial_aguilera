@@ -294,3 +294,76 @@ textarea.admin-input { resize: vertical; }
   transition: all 0.2s;
 }
 .exit-modal__btn-leave:hover { color: #ccc; border-color: #777; }
+
+/* ── Admin Tabs ── */
+.admin-nav-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.admin-nav-tab {
+  padding: 12px 22px;
+  background: #141424;
+  border: 1px solid #2a2a4a;
+  border-radius: 10px;
+  color: #888;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-nav-tab:hover {
+  color: #fff;
+  border-color: #4a4a7a;
+}
+.admin-nav-tab.active {
+  background: #1a1a2e;
+  color: #c9a84c;
+  border-color: #c9a84c;
+}
+
+/* ── Subscribers Section ── */
+.admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.admin-section-sub {
+  color: #888;
+  font-size: 0.88rem;
+  margin: 4px 0 0;
+}
+.btn-export-csv {
+  padding: 10px 20px;
+  background: #c9a84c;
+  color: #0d0d0d;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-export-csv:hover {
+  background: #e0bf70;
+}
+.btn-export-csv:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sub-email a {
+  color: #c9a84c;
+  text-decoration: none;
+}
+.sub-email a:hover {
+  text-decoration: underline;
+}
+.admin-empty {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+}

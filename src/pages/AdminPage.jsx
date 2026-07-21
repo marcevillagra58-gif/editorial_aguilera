@@ -24,6 +24,9 @@ export default function AdminPage({ onNavigate }) {
   const [msg, setMsg]         = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [exitModal, setExitModal] = useState(null); // { dest, params }
+  const [adminTab, setAdminTab]   = useState('books'); // 'books' | 'subscribers'
+  const [subscribers, setSubscribers] = useState([]);
+  const [deleteSubConfirm, setDeleteSubConfirm] = useState(null);
   const fileRef = useRef();
 
   const headers = { 'Content-Type': 'application/json', 'x-admin-password': pass };
@@ -50,15 +53,60 @@ export default function AdminPage({ onNavigate }) {
     if (Array.isArray(data)) setBooks(data);
   };
 
+  const loadSubscribers = async () => {
+    try {
+      const res = await fetch('/api/subscribers', { headers });
+      const data = await res.json();
+      if (Array.isArray(data)) setSubscribers(data);
+    } catch (e) {
+      console.error('Error al cargar suscriptores', e);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     const res = await fetch('/api/books', { headers: { 'x-admin-password': pass } });
     if (res.ok) {
       setAuthed(true);
       loadBooks();
+      // cargar suscriptores usando la clave recién tipeada
+      const subRes = await fetch('/api/subscribers', { headers: { 'x-admin-password': pass } });
+      const subData = await subRes.json();
+      if (Array.isArray(subData)) setSubscribers(subData);
     } else {
       setError('Contraseña incorrecta');
     }
+  };
+
+  const handleDeleteSubscriber = async (id) => {
+    const res = await fetch(`/api/subscribers/${id}`, { method: 'DELETE', headers });
+    if (res.ok) {
+      setMsg('🗑️ Suscriptor eliminado');
+      setDeleteSubConfirm(null);
+      loadSubscribers();
+      setTimeout(() => setMsg(''), 3000);
+    }
+  };
+
+  const exportSubscribersCSV = () => {
+    if (subscribers.length === 0) return;
+    const csvHeader = "\uFEFFEmail,Fecha de suscripción\n";
+    const csvRows = subscribers.map(s => {
+      const fecha = new Date(s.fechaSuscripcion).toLocaleDateString('es-AR', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      return `"${s.email}","${fecha}"`;
+    }).join("\n");
+
+    const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `suscriptores_editorial_aguilera_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleUpload = async (file) => {
@@ -165,16 +213,33 @@ export default function AdminPage({ onNavigate }) {
       <header className="admin-header">
         <h1>⚙ Panel de Administrador</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <span>{books.length} libros en catálogo</span>
+          <span>{books.length} libros · {subscribers.length} suscriptores</span>
           <button className="btn-exit-header" onClick={() => safeNavigate('home')}>
             ← Volver al sitio
           </button>
         </div>
       </header>
 
+      {/* Tabs */}
+      <div className="admin-nav-tabs">
+        <button
+          className={`admin-nav-tab ${adminTab === 'books' ? 'active' : ''}`}
+          onClick={() => setAdminTab('books')}
+        >
+          📚 Catálogo de Libros ({books.length})
+        </button>
+        <button
+          className={`admin-nav-tab ${adminTab === 'subscribers' ? 'active' : ''}`}
+          onClick={() => setAdminTab('subscribers')}
+        >
+          ✉️ Suscriptores Newsletter ({subscribers.length})
+        </button>
+      </div>
+
       {msg && <div className="admin-msg">{msg}</div>}
 
-      {/* FORM */}
+      {adminTab === 'books' ? (
+        <>
       <section className="admin-form-section">
         <h2>{editingId ? `Editando libro #${editingId}` : 'Agregar nuevo libro'}</h2>
         <form className="admin-form" onSubmit={handleSave}>
@@ -320,6 +385,73 @@ export default function AdminPage({ onNavigate }) {
           </tbody>
         </table>
       </section>
+      </>
+      ) : (
+        /* SUBSCRIBERS SECTION */
+        <section className="admin-list-section">
+          <div className="admin-section-header">
+            <div>
+              <h2>Suscriptores al Newsletter</h2>
+              <p className="admin-section-sub">Personas registradas para recibir novedades de la editorial.</p>
+            </div>
+            <button
+              className="btn-export-csv"
+              onClick={exportSubscribersCSV}
+              disabled={subscribers.length === 0}
+            >
+              📥 Exportar a Excel (CSV)
+            </button>
+          </div>
+
+          {subscribers.length === 0 ? (
+            <div className="admin-empty">
+              <span>📭 Aún no hay suscriptores registrados.</span>
+            </div>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Email</th>
+                  <th>Fecha de suscripción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subscribers.map((s, idx) => (
+                  <tr key={s._id || idx}>
+                    <td>{idx + 1}</td>
+                    <td className="sub-email">
+                      <a href={`mailto:${s.email}`}>{s.email}</a>
+                    </td>
+                    <td>
+                      {new Date(s.fechaSuscripcion).toLocaleDateString('es-AR', {
+                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })} hs
+                    </td>
+                    <td className="admin-actions">
+                      {deleteSubConfirm === s._id ? (
+                        <>
+                          <button className="btn-confirm-delete" onClick={() => handleDeleteSubscriber(s._id)}>
+                            ¿Confirmar?
+                          </button>
+                          <button className="btn-cancel-delete" onClick={() => setDeleteSubConfirm(null)}>
+                            No
+                          </button>
+                        </>
+                      ) : (
+                        <button className="btn-delete" title="Eliminar suscriptor" onClick={() => setDeleteSubConfirm(s._id)}>
+                          🗑️
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
 
       {/* Modal de confirmación de salida */}
       {exitModal && (
