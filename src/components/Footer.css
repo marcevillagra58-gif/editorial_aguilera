@@ -44,7 +44,7 @@
 /* Main */
 .footer__main {
   background: var(--navy-900);
-  padding: 32px 0 24px;
+  padding: 24px 0 12px;
 }
 
 .footer__grid {
@@ -70,7 +70,7 @@
 }
 
 .footer__logo-center-wrap {
-  margin-top: 18px;
+  margin-top: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -78,12 +78,12 @@
 }
 
 .footer__logo-center {
-  height: 140px;
+  height: 80px;
   width: auto;
   opacity: 0.95;
   object-fit: contain;
   mix-blend-mode: screen; /* To make a black background transparent */
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
   image-rendering: -webkit-optimize-contrast;
   transition: transform var(--transition-fast);
 }
