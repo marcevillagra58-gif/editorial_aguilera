@@ -85,11 +85,11 @@ function ContactPage({ onNavigate }) {
               <li>
                 ✉{' '}
                 <a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=tienda@editorialaguilera.com.ar"
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=contacto@editorialaguilera.com.ar"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  tienda@editorialaguilera.com.ar
+                  contacto@editorialaguilera.com.ar
                 </a>
               </li>
               <li>
