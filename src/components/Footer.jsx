@@ -102,7 +102,12 @@ export default function Footer({ onNavigate }) {
                     </a>
                   </li>
                   <li>
-                    <a href="mailto:tienda@editorialaguilera.com.ar" className="footer__link footer__link--contact">
+                    <a
+                      href="https://mail.google.com/mail/?view=cm&fs=1&to=tienda@editorialaguilera.com.ar"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footer__link footer__link--contact"
+                    >
                       ✉ tienda@editorialaguilera.com.ar
                     </a>
                   </li>

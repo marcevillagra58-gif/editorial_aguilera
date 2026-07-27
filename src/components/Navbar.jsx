@@ -102,7 +102,13 @@ export default function Navbar({ onNavigate, currentPage }) {
                 </svg>
                 WhatsApp
               </a>
-              <a href="mailto:tienda@editorialaguilera.com.ar">✉ Contacto</a>
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=tienda@editorialaguilera.com.ar"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ✉ Contacto
+              </a>
             </div>
           </div>
         </div>

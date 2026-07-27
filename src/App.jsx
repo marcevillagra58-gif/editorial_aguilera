@@ -81,12 +81,21 @@ function ContactPage({ onNavigate }) {
             <p>Tu editorial jurídica de confianza desde 1985</p>
             <ul className="contact-page__list">
               <li>📍 <span>Buenos Aires, Argentina</span></li>
-              <li>📞 <a href="tel:+541100000000">(011) XXXX-XXXX</a></li>
-              <li>✉ <a href="mailto:tienda@editorialaguilera.com.ar">tienda@editorialaguilera.com.ar</a></li>
+              <li>📞 <a href="tel:+5491156151265">+54 9 11-5615-1265</a></li>
               <li>
-                🟢
+                ✉{' '}
                 <a
-                  href="https://api.whatsapp.com/send?phone=5491100000000&text=Hola! Quería consultar sobre..."
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=tienda@editorialaguilera.com.ar"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  tienda@editorialaguilera.com.ar
+                </a>
+              </li>
+              <li>
+                🟢{' '}
+                <a
+                  href="https://api.whatsapp.com/send?phone=5491156151265&text=Hola! Quería consultar sobre un libro."
                   target="_blank"
                   rel="noopener noreferrer"
                 >
