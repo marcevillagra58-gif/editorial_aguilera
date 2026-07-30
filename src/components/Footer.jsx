@@ -120,6 +120,16 @@ export default function Footer({ onNavigate }) {
               <button className="footer__bottom-link">Términos y condiciones</button>
               <button className="footer__bottom-link">Política de privacidad</button>
               <button className="footer__bottom-link">Botón de arrepentimiento</button>
+              <a
+                href="https://www.mavdigital.com.ar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer__dev-link"
+                title="Desarrollado por MaV Digital"
+              >
+                <span>Desarrollado por</span>
+                <img src="/Logo MaVDigital.png" alt="MaV Digital" className="footer__dev-logo" />
+              </a>
             </div>
           </div>
         </div>
