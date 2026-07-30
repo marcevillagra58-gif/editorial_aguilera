@@ -62,15 +62,17 @@
 }
 
 .footer__logo {
-  height: 105px;
+  height: 120px;
   width: auto;
-  opacity: 0.95;
+  opacity: 1;
   border-radius: var(--radius-sm);
   align-self: flex-start;
   object-fit: contain;
   mix-blend-mode: screen; /* To make black background transparent */
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
-  margin-bottom: -15px;
+  filter: brightness(1.3) contrast(1.2) drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+  image-rendering: -webkit-optimize-contrast;
+  margin-top: -12px;
+  margin-bottom: -8px;
 }
 
 .footer__desc {
