@@ -85,10 +85,6 @@
   gap: var(--space-sm);
   margin-top: var(--space-xs);
 }
-  display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-xs);
-}
 
 .footer__social-link {
   width: 36px;
