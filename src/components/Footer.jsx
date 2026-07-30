@@ -32,15 +32,12 @@ export default function Footer({ onNavigate }) {
           <div className="footer__grid">
             {/* Brand */}
             <div className="footer__brand">
-              <h4 className="footer__col-title">EDITORIAL AGUILERA</h4>
-              <p className="footer__tagline">
-                Tu editorial jurídica de confianza desde 1985
-              </p>
+              <img src="/logo.png" alt="Logo Editorial Aguilera" className="footer__logo" />
               <p className="footer__desc">
-                Más de 500 títulos especializados en derecho para abogados, estudiantes y docentes de todo el país.
+                Más de 500 títulos especializados en derecho para abogados, estudiantes y docentes de todo el país. Tu editorial jurídica de confianza desde 1985.
               </p>
               
-              {/* Social at bottom left */}
+              {/* Social */}
               <div className="footer__social">
                 <a href="#" aria-label="Facebook Editorial Aguilera" className="footer__social-link" id="footer-facebook">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -70,9 +67,9 @@ export default function Footer({ onNavigate }) {
               </div>
             </div>
 
-            {/* Links & Center Logo */}
-            <div className="footer__col footer__col--center">
-              <h4 className="footer__col-title">COMPRAS</h4>
+            {/* Links */}
+            <div className="footer__col">
+              <h4 className="footer__col-title">Compras</h4>
               <nav aria-label="Links de compras">
                 <ul className="footer__links">
                   {['Cómo comprar', 'Formas de pago', 'Envíos y plazos', 'Cambios y devoluciones'].map(item => (
@@ -82,10 +79,6 @@ export default function Footer({ onNavigate }) {
                   ))}
                 </ul>
               </nav>
-
-              <div className="footer__logo-center-wrap">
-                <img src="/logo.png" alt="Logo Editorial Aguilera" className="footer__logo-center" />
-              </div>
             </div>
 
             <div className="footer__col">
