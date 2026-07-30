@@ -44,7 +44,7 @@
 /* Main */
 .footer__main {
   background: var(--navy-900);
-  padding: 40px 0 28px;
+  padding: 16px 0 12px;
 }
 
 .footer__grid {
@@ -58,11 +58,11 @@
 .footer__brand {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-xs);
 }
 
 .footer__logo {
-  height: 160px;
+  height: 150px;
   width: auto;
   max-width: 100%;
   opacity: 1;
@@ -72,8 +72,9 @@
   mix-blend-mode: screen; /* To make black background transparent */
   filter: brightness(1.35) contrast(1.25) drop-shadow(0 2px 8px rgba(0,0,0,0.6));
   image-rendering: -webkit-optimize-contrast;
-  margin-top: -24px;
-  margin-bottom: -32px;
+  margin-top: -42px;
+  margin-bottom: -38px;
+  margin-left: -12px;
 }
 
 .footer__desc {
@@ -87,7 +88,7 @@
 .footer__social {
   display: flex;
   gap: var(--space-sm);
-  margin-top: var(--space-xs);
+  margin-top: 4px;
 }
 
 .footer__social-link {

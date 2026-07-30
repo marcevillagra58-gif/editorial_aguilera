@@ -116,6 +116,11 @@ export default function Footer({ onNavigate }) {
         <div className="container">
           <div className="footer__bottom-inner">
             <p>© 2025 Editorial Aguilera. Todos los derechos reservados. · CABA, Argentina</p>
+            <div className="footer__bottom-links">
+              <button className="footer__bottom-link">Términos y condiciones</button>
+              <button className="footer__bottom-link">Política de privacidad</button>
+              <button className="footer__bottom-link">Botón de arrepentimiento</button>
+            </div>
           </div>
         </div>
       </div>
