@@ -62,7 +62,7 @@
 }
 
 .footer__logo {
-  height: 70px;
+  height: 105px;
   width: auto;
   opacity: 0.95;
   border-radius: var(--radius-sm);
@@ -70,6 +70,7 @@
   object-fit: contain;
   mix-blend-mode: screen; /* To make black background transparent */
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+  margin-bottom: -15px;
 }
 
 .footer__desc {
