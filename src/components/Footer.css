@@ -159,7 +159,7 @@
 
 .footer__bottom-inner {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: var(--space-md);
   flex-wrap: wrap;
