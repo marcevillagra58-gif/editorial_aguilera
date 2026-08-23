@@ -83,9 +83,7 @@ export default function Navbar({ onNavigate, currentPage }) {
         <div className="container">
           <div className="navbar__topbar-inner">
             <div className="navbar__topbar-left">
-              <span>🚚 Envío gratis en compras +$80.000</span>
-              <span>💳 Hasta 6 cuotas sin interés</span>
-              <span>📦 Despacho en 24/48 hs</span>
+              <span>🚚 Comuníquese para acordar el envío luego de hacer su pedido</span>
             </div>
             <div className="navbar__topbar-right">
               <a href="tel:+5491156151265">📞 +54 9 11-5615-1265</a>
