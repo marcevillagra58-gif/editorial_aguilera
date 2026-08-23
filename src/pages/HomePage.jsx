@@ -1,7 +1,7 @@
 // src/pages/HomePage.jsx — Aura — Fase 2
 import { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
-import { categorias, formatPrecio } from '../data/books';
+import { categorias, formatPrecio, books as staticBooks } from '../data/books';
 import BookCard from '../components/BookCard';
 import './HomePage.css';
 
@@ -17,16 +17,16 @@ export default function HomePage({ onNavigate }) {
     fetch('/api/books')
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setBooks(data);
         } else {
-          console.error('API did not return an array:', data);
-          setBooks([]);
+          setBooks(staticBooks);
         }
         setLoading(false);
       })
       .catch(err => {
-        console.error('Error fetching books:', err);
+        console.error('Error fetching books, using static fallback:', err);
+        setBooks(staticBooks);
         setLoading(false);
       });
   }, []);
