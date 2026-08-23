@@ -31,6 +31,26 @@ export default function AdminPage({ onNavigate }) {
 
   const headers = { 'Content-Type': 'application/json', 'x-admin-password': pass };
 
+  useEffect(() => {
+    const savedPass = localStorage.getItem('admin_pass');
+    if (savedPass) {
+      setPass(savedPass);
+      // Intentar validar contraseña guardada
+      fetch('/api/subscribers', { headers: { 'x-admin-password': savedPass } })
+        .then(res => {
+          if (res.ok) {
+            setAuthed(true);
+            loadBooks();
+            return res.json();
+          }
+        })
+        .then(data => {
+          if (Array.isArray(data)) setSubscribers(data);
+        })
+        .catch(() => {});
+    }
+  }, []);
+
   // Protección al cerrar/recargar la pestaña
   useEffect(() => {
     if (!authed) return;
@@ -53,9 +73,9 @@ export default function AdminPage({ onNavigate }) {
     if (Array.isArray(data)) setBooks(data);
   };
 
-  const loadSubscribers = async () => {
+  const loadSubscribers = async (currentPass = pass) => {
     try {
-      const res = await fetch('/api/subscribers', { headers });
+      const res = await fetch('/api/subscribers', { headers: { 'x-admin-password': currentPass } });
       const data = await res.json();
       if (Array.isArray(data)) setSubscribers(data);
     } catch (e) {
@@ -65,13 +85,13 @@ export default function AdminPage({ onNavigate }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const res = await fetch('/api/books', { headers: { 'x-admin-password': pass } });
+    const res = await fetch('/api/subscribers', { headers: { 'x-admin-password': pass } });
     if (res.ok) {
+      localStorage.setItem('admin_pass', pass);
       setAuthed(true);
+      setError('');
       loadBooks();
-      // cargar suscriptores usando la clave recién tipeada
-      const subRes = await fetch('/api/subscribers', { headers: { 'x-admin-password': pass } });
-      const subData = await subRes.json();
+      const subData = await res.json();
       if (Array.isArray(subData)) setSubscribers(subData);
     } else {
       setError('Contraseña incorrecta');
@@ -114,16 +134,27 @@ export default function AdminPage({ onNavigate }) {
     setUploading(true);
     const fd = new FormData();
     fd.append('portada', file);
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'x-admin-password': pass },
-      body: fd,
-    });
-    const data = await res.json();
-    setUploading(false);
-    if (data.url) {
-      setForm(f => ({ ...f, portada: data.url }));
-      setPreview(data.url);
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-admin-password': pass },
+        body: fd,
+      });
+      const data = await res.json();
+      setUploading(false);
+      if (res.ok && data.url) {
+        setForm(f => ({ ...f, portada: data.url }));
+        setPreview(data.url);
+      } else if (res.status === 401) {
+        setMsg('❌ Sesión expirada o contraseña inválida. Por favor reingresá.');
+        setAuthed(false);
+        localStorage.removeItem('admin_pass');
+      } else {
+        setMsg('❌ Error al subir la portada: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      setUploading(false);
+      setMsg('❌ Error de conexión al subir la portada');
     }
   };
 
@@ -212,10 +243,21 @@ export default function AdminPage({ onNavigate }) {
     <div className="admin-page">
       <header className="admin-header">
         <h1>⚙ Panel de Administrador</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span>{books.length} libros · {subscribers.length} suscriptores</span>
           <button className="btn-exit-header" onClick={() => safeNavigate('home')}>
             ← Volver al sitio
+          </button>
+          <button
+            className="btn-exit-header"
+            style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)' }}
+            onClick={() => {
+              localStorage.removeItem('admin_pass');
+              setAuthed(false);
+              setPass('');
+            }}
+          >
+            🔒 Cerrar sesión
           </button>
         </div>
       </header>
