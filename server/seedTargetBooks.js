@@ -1,6 +1,11 @@
-// src/data/books.js — Editorial Aguilera
+// server/seedTargetBooks.js
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import Book from './models/Book.js';
 
-export const books = [
+dotenv.config();
+
+const targetBooks = [
   {
     id: 1,
     titulo: "Salud y medioambiente en el Derecho del trabajo",
@@ -218,3 +223,25 @@ export const books = [
     slug: "criterios-de-oportunidad-en-el-proceso-penal-romero-berdullas"
   }
 ];
+
+const seedTargetBooks = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ Conectado a MongoDB para actualizar libros exactamente de la imagen');
+
+    await Book.deleteMany({});
+    console.log('🗑️  Se eliminaron los registros de libros anteriores');
+
+    await Book.insertMany(targetBooks);
+    console.log('📚 Se ingresaron los 10 libros exactos de la imagen exitosamente');
+
+    mongoose.disconnect();
+    console.log('🔌 Desconectado de MongoDB');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error al cargar libros:', error);
+    process.exit(1);
+  }
+};
+
+seedTargetBooks();
