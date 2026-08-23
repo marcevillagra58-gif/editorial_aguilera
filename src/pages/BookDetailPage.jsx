@@ -60,13 +60,6 @@ export default function BookDetailPage({ book, onNavigate }) {
                 className="book-detail__cover"
               />
             </div>
-            {/* Trust mini */}
-            <div className="book-detail__trust">
-              <div className="book-detail__trust-item">🚚 <span>Envío gratis +$80.000</span></div>
-              <div className="book-detail__trust-item">💳 <span>Hasta 6 cuotas</span></div>
-              <div className="book-detail__trust-item">📦 <span>Despacho en 24/48 hs</span></div>
-              <div className="book-detail__trust-item">🔒 <span>Compra segura</span></div>
-            </div>
           </div>
 
           {/* Info */}
