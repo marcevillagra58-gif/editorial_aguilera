@@ -77,6 +77,11 @@ export default function Footer({ onNavigate }) {
                     <button className="footer__link" onClick={() => onNavigate('contact')}>Contacto</button>
                   </li>
                   <li>
+                    <a href="tel:+5491156151265" className="footer__link footer__link--contact">
+                      📞 +54 9 11-5615-1265
+                    </a>
+                  </li>
+                  <li>
                     <a
                       href="https://mail.google.com/mail/?view=cm&fs=1&to=contacto@editorialaguilera.com.ar"
                       target="_blank"

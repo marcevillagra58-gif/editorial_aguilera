@@ -81,6 +81,7 @@ function ContactPage({ onNavigate }) {
             <p>Tu editorial jurídica de confianza desde 1985</p>
             <ul className="contact-page__list">
               <li>📍 <span>Buenos Aires, Argentina</span></li>
+              <li>📞 <a href="tel:+5491156151265">+54 9 11-5615-1265</a></li>
               <li>
                 ✉{' '}
                 <a
