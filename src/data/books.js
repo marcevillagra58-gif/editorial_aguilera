@@ -218,3 +218,26 @@ export const books = [
     slug: "criterios-de-oportunidad-en-el-proceso-penal-romero-berdullas"
   }
 ];
+
+export const categorias = [
+  { id: 'civil', label: 'Derecho Civil', icon: 'BookOpen' },
+  { id: 'penal', label: 'Derecho Penal', icon: 'Scale' },
+  { id: 'comercial', label: 'Derecho Comercial', icon: 'Briefcase' },
+  { id: 'laboral', label: 'Derecho Laboral', icon: 'Users' },
+  { id: 'constitucional', label: 'Derecho Constitucional', icon: 'Shield' },
+  { id: 'administrativo', label: 'Derecho Administrativo', icon: 'Landmark' },
+  { id: 'procesal', label: 'Derecho Procesal', icon: 'FileText' },
+  { id: 'familia', label: 'Derecho de Familia', icon: 'Heart' },
+  { id: 'tributario', label: 'Derecho Tributario', icon: 'Receipt' },
+  { id: 'daños', label: 'Responsabilidad Civil y Daños', icon: 'AlertTriangle' },
+  { id: 'internacional', label: 'Derecho Internacional', icon: 'Globe' }
+];
+
+export const formatPrecio = (precio) => {
+  if (precio === null || precio === undefined) return '';
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0
+  }).format(precio);
+};
