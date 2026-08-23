@@ -4,28 +4,6 @@ import './Footer.css';
 export default function Footer({ onNavigate }) {
   return (
     <footer className="footer" role="contentinfo">
-      {/* Trust bar */}
-      <div className="footer__trust">
-        <div className="container">
-          <div className="footer__trust-grid">
-            {[
-              { icon: '🚚', title: 'Envío gratis', sub: 'en compras +$80.000' },
-              { icon: '💳', title: 'Hasta 6 cuotas', sub: 'sin interés' },
-              { icon: '🔒', title: 'Compra segura', sub: 'Plataforma protegida' },
-              { icon: '📦', title: 'Despacho rápido', sub: 'en 24/48 hs hábiles' },
-            ].map(item => (
-              <div key={item.title} className="footer__trust-item">
-                <span className="footer__trust-icon">{item.icon}</span>
-                <div>
-                  <p className="footer__trust-title">{item.title}</p>
-                  <p className="footer__trust-sub">{item.sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Main footer */}
       <div className="footer__main">
         <div className="container">
