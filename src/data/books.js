@@ -220,17 +220,17 @@ export const books = [
 ];
 
 export const categorias = [
-  { id: 'civil', label: 'Derecho Civil', icon: 'BookOpen' },
-  { id: 'penal', label: 'Derecho Penal', icon: 'Scale' },
-  { id: 'comercial', label: 'Derecho Comercial', icon: 'Briefcase' },
-  { id: 'laboral', label: 'Derecho Laboral', icon: 'Users' },
-  { id: 'constitucional', label: 'Derecho Constitucional', icon: 'Shield' },
-  { id: 'administrativo', label: 'Derecho Administrativo', icon: 'Landmark' },
-  { id: 'procesal', label: 'Derecho Procesal', icon: 'FileText' },
-  { id: 'familia', label: 'Derecho de Familia', icon: 'Heart' },
-  { id: 'tributario', label: 'Derecho Tributario', icon: 'Receipt' },
-  { id: 'daños', label: 'Responsabilidad Civil y Daños', icon: 'AlertTriangle' },
-  { id: 'internacional', label: 'Derecho Internacional', icon: 'Globe' }
+  { id: 'civil', label: 'Derecho Civil', icon: '/cat_civil_1783884900899.png' },
+  { id: 'penal', label: 'Derecho Penal', icon: '/cat_penal_1783884909973.png' },
+  { id: 'comercial', label: 'Derecho Comercial', icon: '/cat_comercial_1783884963473.png' },
+  { id: 'laboral', label: 'Derecho Laboral', icon: '/cat_laboral_1783884918654.png' },
+  { id: 'constitucional', label: 'Derecho Constitucional', icon: '/cat_constitucional_1783884946194.png' },
+  { id: 'administrativo', label: 'Derecho Administrativo', icon: '/cat_administrativo_1783884953988.png' },
+  { id: 'procesal', label: 'Derecho Procesal', icon: '/cat_procesal_1783884937478.png' },
+  { id: 'familia', label: 'Derecho de Familia', icon: '/cat_familia_1783884928107.png' },
+  { id: 'tributario', label: 'Derecho Tributario', icon: '/cat_tributario_1783884981240.png' },
+  { id: 'daños', label: 'Responsabilidad Civil y Daños', icon: '/cat_danos_1783884971972.png' },
+  { id: 'internacional', label: 'Derecho Internacional', icon: '/cat_internacional_1783884991173.png' }
 ];
 
 export const formatPrecio = (precio) => {

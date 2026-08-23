@@ -251,7 +251,7 @@ export default function HomePage({ onNavigate }) {
                 <div key={cat.id} className="by-subject__group">
                   <div className="by-subject__group-header">
                     <h3 className="by-subject__group-title">
-                      <span>{cat.icon}</span> {cat.label}
+                      <img src={cat.icon} alt={cat.label} className="cat-bar__img-icon" style={{ width: '22px', height: '22px', display: 'inline-block', verticalAlign: '-3px', marginRight: '6px' }} /> {cat.label}
                     </h3>
                     <button
                       id={`subject-see-all-${cat.id}`}
