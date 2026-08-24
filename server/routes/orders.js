@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   port: parseInt(process.env.SMTP_PORT || '465'),
   secure: true, // 465 SSL
   auth: {
-    user: process.env.SMTP_USER || 'ventas@editorialaguilera.com.ar',
+    user: process.env.SMTP_USER || 'contacto@editorialaguilera.com.ar',
     pass: process.env.SMTP_PASS || '',
   },
 });
@@ -39,9 +39,11 @@ router.post('/', async (req, res) => {
 
     const totalFormatted = `$${total.toLocaleString('es-AR')}`;
 
+    const senderEmail = process.env.SMTP_USER || 'contacto@editorialaguilera.com.ar';
+
     // 2. Email para la Editorial (ventas@editorialaguilera.com.ar)
     const mailToVentas = {
-      from: `"Editorial Aguilera - Tienda" <${process.env.SMTP_USER || 'ventas@editorialaguilera.com.ar'}>`,
+      from: `"Editorial Aguilera Web" <${senderEmail}>`,
       to: 'ventas@editorialaguilera.com.ar',
       subject: `🛒 Nuevo Pedido Web de ${cliente.nombre}`,
       html: `
@@ -82,7 +84,7 @@ router.post('/', async (req, res) => {
 
     // 3. Email de Confirmación para el Comprador
     const mailToCliente = {
-      from: `"Editorial Aguilera" <${process.env.SMTP_USER || 'ventas@editorialaguilera.com.ar'}>`,
+      from: `"Editorial Aguilera" <${senderEmail}>`,
       to: cliente.email,
       subject: `📚 Confirmación de Pedido - Editorial Aguilera`,
       html: `
@@ -120,21 +122,21 @@ router.post('/', async (req, res) => {
       `
     };
 
-    // Intentar enviar emails si la clave SMTP está provista, sino responder exitoso para no bloquear al usuario
-    if (process.env.SMTP_PASS) {
-      await Promise.all([
-        transporter.sendMail(mailToVentas),
-        transporter.sendMail(mailToCliente)
-      ]);
-      console.log(`✅ Emails de pedido enviados a ventas@editorialaguilera.com.ar y a ${cliente.email}`);
-    } else {
-      console.log(`⚠️ SMTP_PASS no configurado. Simulación exitosa de pedido de ${cliente.nombre} (${cliente.email})`);
+    if (!process.env.SMTP_PASS) {
+      console.error('❌ Error: Falta configurar la variable de entorno SMTP_PASS en Vercel.');
+      return res.status(500).json({ error: 'El servidor no tiene configurada la contraseña del correo de salida (SMTP_PASS en Vercel).' });
     }
 
+    await Promise.all([
+      transporter.sendMail(mailToVentas),
+      transporter.sendMail(mailToCliente)
+    ]);
+
+    console.log(`✅ Emails de pedido enviados desde ${senderEmail} a ventas@editorialaguilera.com.ar y a ${cliente.email}`);
     return res.status(200).json({ success: true, message: 'Pedido recibido con éxito' });
   } catch (error) {
-    console.error('❌ Error al procesar pedido:', error);
-    return res.status(500).json({ error: 'No se pudo procesar la solicitud de pedido' });
+    console.error('❌ Error al enviar correos de pedido:', error);
+    return res.status(500).json({ error: `Error al enviar correos: ${error.message}` });
   }
 });
 
