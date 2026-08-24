@@ -1,20 +1,81 @@
-// src/components/CartSidebar.jsx — Aura — Fase 2
+import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { formatPrecio } from '../data/books';
 import './CartSidebar.css';
 
 export default function CartSidebar({ onNavigate }) {
   const { items, removeItem, updateQty, clearCart, total, count, isOpen, setIsOpen } = useCart();
+  
+  // State for order registration modal
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [cliente, setCliente] = useState({ nombre: '', email: '', telefono: '', direccion: '', notas: '' });
+  const [loading, setLoading] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderError, setOrderError] = useState('');
 
   if (!isOpen) return null;
+
+  const handleOpenOrderModal = () => {
+    setShowOrderModal(true);
+    setOrderError('');
+  };
+
+  const handleSendOrder = async (e) => {
+    e.preventDefault();
+    if (!cliente.nombre || !cliente.email || !cliente.telefono) {
+      setOrderError('Por favor completá los campos obligatorios (*)');
+      return;
+    }
+
+    setLoading(true);
+    setOrderError('');
+
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente,
+          items,
+          total
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setOrderSuccess(true);
+        setLoading(false);
+        // Empty the cart after successful order
+        clearCart();
+      } else {
+        setLoading(false);
+        setOrderError(data.error || 'Ocurrió un problema al procesar el pedido. Intentá de nuevo.');
+      }
+    } catch (err) {
+      console.error('Error al enviar pedido:', err);
+      setLoading(false);
+      setOrderError('Error de conexión. Verificá tu red e intentá nuevamente.');
+    }
+  };
+
+  const handleCloseSuccess = () => {
+    setOrderSuccess(false);
+    setShowOrderModal(false);
+    setIsOpen(false);
+    setCliente({ nombre: '', email: '', telefono: '', direccion: '', notas: '' });
+  };
 
   return (
     <>
       <div
         className="cart-overlay"
-        onClick={() => setIsOpen(false)}
+        onClick={() => {
+          if (!showOrderModal) setIsOpen(false);
+        }}
         aria-hidden="true"
       />
+
       <aside className="cart-sidebar" role="dialog" aria-label="Carrito de compras" aria-modal="true">
         {/* Header */}
         <div className="cart-sidebar__header">
@@ -111,6 +172,15 @@ export default function CartSidebar({ onNavigate }) {
               <span className="cart-total__value">{formatPrecio(total)}</span>
             </div>
             <p className="cart-total__sub">* Precio sujeto a modificaciones</p>
+            
+            <button
+              id="cart-send-order-btn"
+              className="btn btn-primary cart-send-btn"
+              onClick={handleOpenOrderModal}
+            >
+              📩 Enviar Pedido
+            </button>
+
             <button
               id="cart-clear-btn"
               className="cart-clear-btn"
@@ -122,6 +192,91 @@ export default function CartSidebar({ onNavigate }) {
           </div>
         )}
       </aside>
+
+      {/* Order Modal */}
+      {showOrderModal && (
+        <div className="order-modal-backdrop">
+          <div className="order-modal">
+            {orderSuccess ? (
+              <div className="order-modal__success">
+                <div className="order-modal__icon">🎉</div>
+                <h3>¡Pedido enviado con éxito!</h3>
+                <p>Enviamos una copia con la confirmación de tu solicitud a <strong>{cliente.email}</strong>.</p>
+                <p className="order-modal__sub">Nos pondremos en contacto a la brevedad al teléfono proporcionado para coordinar el envío y pago.</p>
+                <button className="btn btn-primary" onClick={handleCloseSuccess}>
+                  Aceptar
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSendOrder} className="order-modal__form">
+                <div className="order-modal__header">
+                  <h3>Registrar datos del comprador</h3>
+                  <button type="button" className="order-modal__close" onClick={() => setShowOrderModal(false)}>✕</button>
+                </div>
+                <p className="order-modal__desc">Por favor ingresá tus datos para que ventas@editorialaguilera.com.ar procese tu pedido:</p>
+
+                {orderError && <div className="order-modal__error">{orderError}</div>}
+
+                <div className="form-group">
+                  <label htmlFor="order-nombre">Nombre y Apellido *</label>
+                  <input
+                    id="order-nombre"
+                    type="text"
+                    required
+                    placeholder="Ej. Juan Pérez"
+                    value={cliente.nombre}
+                    onChange={(e) => setCliente({ ...cliente, nombre: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="order-email">Correo Electrónico *</label>
+                  <input
+                    id="order-email"
+                    type="email"
+                    required
+                    placeholder="ejemplo@correo.com"
+                    value={cliente.email}
+                    onChange={(e) => setCliente({ ...cliente, email: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="order-telefono">Teléfono / WhatsApp *</label>
+                  <input
+                    id="order-telefono"
+                    type="tel"
+                    required
+                    placeholder="Ej. 11 5555-4444"
+                    value={cliente.telefono}
+                    onChange={(e) => setCliente({ ...cliente, telefono: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="order-direccion">Dirección / Localidad (Opcional)</label>
+                  <input
+                    id="order-direccion"
+                    type="text"
+                    placeholder="Ej. Av. Santa Fe 1234, CABA"
+                    value={cliente.direccion}
+                    onChange={(e) => setCliente({ ...cliente, direccion: e.target.value })}
+                  />
+                </div>
+
+                <div className="order-modal__actions">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowOrderModal(false)}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
+                    {loading ? 'Enviando pedido...' : 'Confirmar y Enviar'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

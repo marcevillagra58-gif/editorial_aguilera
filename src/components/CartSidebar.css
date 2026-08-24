@@ -278,3 +278,139 @@
 .cart-clear-btn:hover {
   color: var(--error);
 }
+
+.cart-send-btn {
+  width: 100%;
+  justify-content: center;
+  font-weight: 700;
+  padding: 12px;
+  font-size: 0.95rem;
+}
+
+/* Order Modal */
+.order-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 27, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.order-modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+}
+
+.order-modal__form {
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.order-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-modal__header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--navy-800);
+  font-family: var(--font-display);
+}
+
+.order-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--gray-400);
+  cursor: pointer;
+}
+
+.order-modal__desc {
+  font-size: 0.88rem;
+  color: var(--gray-600);
+  margin-top: -4px;
+}
+
+.order-modal__error {
+  background: #fdf2f2;
+  color: #9b1c1c;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  border: 1px solid #fbd5d5;
+}
+
+.order-modal__form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-modal__form label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--navy-800);
+}
+
+.order-modal__form input {
+  padding: 10px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.order-modal__form input:focus {
+  border-color: var(--gold-500);
+}
+
+.order-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.order-modal__success {
+  padding: var(--space-xl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.order-modal__icon {
+  font-size: 3rem;
+  margin-bottom: -6px;
+}
+
+.order-modal__success h3 {
+  margin: 0;
+  color: var(--navy-800);
+  font-family: var(--font-display);
+}
+
+.order-modal__sub {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  line-height: 1.4;
+}
