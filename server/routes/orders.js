@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Configuración del transporter Nodemailer con Zoho Mail / SMTP
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtppro.zoho.com',
+  host: process.env.SMTP_HOST || 'smtp.zoho.com',
   port: parseInt(process.env.SMTP_PORT || '465'),
   secure: true, // 465 SSL
   auth: {
