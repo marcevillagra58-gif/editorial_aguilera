@@ -1,19 +1,8 @@
 // server/routes/orders.js
 import express from 'express';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const router = express.Router();
-
-// Configuración del transporter Nodemailer con Zoho Mail / SMTP
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.zoho.com',
-  port: parseInt(process.env.SMTP_PORT || '465'),
-  secure: true, // 465 SSL
-  auth: {
-    user: process.env.SMTP_USER || 'contacto@editorialaguilera.com.ar',
-    pass: process.env.SMTP_PASS || '',
-  },
-});
 
 router.post('/', async (req, res) => {
   try {
@@ -23,6 +12,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Datos incompletos para procesar la orden' });
     }
 
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.error('❌ Error: Falta configurar la variable de entorno RESEND_API_KEY en Vercel.');
+      return res.status(500).json({ error: 'Falta configurar la variable RESEND_API_KEY en el servidor.' });
+    }
+
+    const resend = new Resend(apiKey);
     const fechaStr = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
 
     // 1. Formatear lista de items para email HTML
@@ -38,101 +34,107 @@ router.post('/', async (req, res) => {
     `).join('');
 
     const totalFormatted = `$${total.toLocaleString('es-AR')}`;
-
-    const senderEmail = process.env.SMTP_USER || 'contacto@editorialaguilera.com.ar';
+    const fromEmail = process.env.EMAIL_FROM || 'Editorial Aguilera <contacto@editorialaguilera.com.ar>';
 
     // 2. Email para la Editorial (ventas@editorialaguilera.com.ar)
-    const mailToVentas = {
-      from: `"Editorial Aguilera Web" <${senderEmail}>`,
-      to: 'ventas@editorialaguilera.com.ar',
-      subject: `🛒 Nuevo Pedido Web de ${cliente.nombre}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
-          <div style="background-color: #0d1b2a; padding: 20px; text-align: center; color: #ffffff;">
-            <h2 style="margin: 0; color: #d4af37;">Nuevo Pedido Web Recibido</h2>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Editorial Aguilera</p>
-          </div>
-          <div style="padding: 20px; background-color: #ffffff; color: #333333;">
-            <h3 style="border-bottom: 2px solid #d4af37; padding-bottom: 5px; color: #0d1b2a;">Datos del Comprador</h3>
-            <p><strong>Nombre y Apellido:</strong> ${cliente.nombre}</p>
-            <p><strong>Email:</strong> ${cliente.email}</p>
-            <p><strong>Teléfono / WhatsApp:</strong> ${cliente.telefono}</p>
-            ${cliente.direccion ? `<p><strong>Dirección / Localidad:</strong> ${cliente.direccion}</p>` : ''}
-            ${cliente.notas ? `<p><strong>Notas adicionales:</strong> ${cliente.notas}</p>` : ''}
-            <p style="font-size: 12px; color: #888;">Fecha de pedido: ${fechaStr}</p>
+    const orderHtmlForAdmin = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #0d1b2a; padding: 20px; text-align: center; color: #ffffff;">
+          <h2 style="margin: 0; color: #d4af37;">Nuevo Pedido Web Recibido</h2>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Editorial Aguilera</p>
+        </div>
+        <div style="padding: 20px; background-color: #ffffff; color: #333333;">
+          <h3 style="border-bottom: 2px solid #d4af37; padding-bottom: 5px; color: #0d1b2a;">Datos del Comprador</h3>
+          <p><strong>Nombre y Apellido:</strong> ${cliente.nombre}</p>
+          <p><strong>Email:</strong> ${cliente.email}</p>
+          <p><strong>Teléfono / WhatsApp:</strong> ${cliente.telefono}</p>
+          ${cliente.direccion ? `<p><strong>Dirección / Localidad:</strong> ${cliente.direccion}</p>` : ''}
+          ${cliente.notas ? `<p><strong>Notas adicionales:</strong> ${cliente.notas}</p>` : ''}
+          <p style="font-size: 12px; color: #888;">Fecha de pedido: ${fechaStr}</p>
 
-            <h3 style="border-bottom: 2px solid #d4af37; padding-bottom: 5px; color: #0d1b2a; margin-top: 25px;">Detalle del Pedido</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-              <thead>
-                <tr style="background-color: #f8f9fa; text-align: left;">
-                  <th style="padding: 10px; border-bottom: 2px solid #ddd;">Libro</th>
-                  <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: center;">Cant.</th>
-                  <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsHtml}
-              </tbody>
-            </table>
-            <div style="text-align: right; margin-top: 15px; font-size: 18px; color: #0d1b2a;">
-              <strong>Total Estimado: ${totalFormatted}</strong>
-            </div>
+          <h3 style="border-bottom: 2px solid #d4af37; padding-bottom: 5px; color: #0d1b2a; margin-top: 25px;">Detalle del Pedido</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr style="background-color: #f8f9fa; text-align: left;">
+                <th style="padding: 10px; border-bottom: 2px solid #ddd;">Libro</th>
+                <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: center;">Cant.</th>
+                <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div style="text-align: right; margin-top: 15px; font-size: 18px; color: #0d1b2a;">
+            <strong>Total Estimado: ${totalFormatted}</strong>
           </div>
         </div>
-      `
-    };
+      </div>
+    `;
 
     // 3. Email de Confirmación para el Comprador
-    const mailToCliente = {
-      from: `"Editorial Aguilera" <${senderEmail}>`,
-      to: cliente.email,
-      subject: `📚 Confirmación de Pedido - Editorial Aguilera`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
-          <div style="background-color: #0d1b2a; padding: 20px; text-align: center; color: #ffffff;">
-            <h2 style="margin: 0; color: #d4af37;">¡Gracias por tu pedido, ${cliente.nombre}!</h2>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Editorial Aguilera - Tu editorial jurídica de confianza</p>
+    const orderHtmlForCustomer = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #0d1b2a; padding: 20px; text-align: center; color: #ffffff;">
+          <h2 style="margin: 0; color: #d4af37;">¡Gracias por tu pedido, ${cliente.nombre}!</h2>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Editorial Aguilera - Tu editorial jurídica de confianza</p>
+        </div>
+        <div style="padding: 20px; background-color: #ffffff; color: #333333;">
+          <p>Hemos recibido correctamente tu solicitud de compra. Un representante de ventas se pondrá en contacto a la brevedad para coordinar la forma de pago y el envío de tu pedido.</p>
+
+          <h3 style="border-bottom: 2px solid #d4af37; padding-bottom: 5px; color: #0d1b2a; margin-top: 20px;">Resumen de tu solicitud</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr style="background-color: #f8f9fa; text-align: left;">
+                <th style="padding: 10px; border-bottom: 2px solid #ddd;">Libro</th>
+                <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: center;">Cant.</th>
+                <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div style="text-align: right; margin-top: 15px; font-size: 18px; color: #0d1b2a;">
+            <strong>Total Estimado: ${totalFormatted}</strong>
           </div>
-          <div style="padding: 20px; background-color: #ffffff; color: #333333;">
-            <p>Hemos recibido correctamente tu solicitud de compra. Un representante de ventas se pondrá en contacto a la brevedad para coordinar la forma de pago y el envío de tu pedido.</p>
+          <p style="font-size: 13px; color: #666; margin-top: 20px;">* Los precios están sujetos a modificaciones y el costo de envío se acuerda según la localidad.</p>
 
-            <h3 style="border-bottom: 2px solid #d4af37; padding-bottom: 5px; color: #0d1b2a; margin-top: 20px;">Resumen de tu solicitud</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-              <thead>
-                <tr style="background-color: #f8f9fa; text-align: left;">
-                  <th style="padding: 10px; border-bottom: 2px solid #ddd;">Libro</th>
-                  <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: center;">Cant.</th>
-                  <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsHtml}
-              </tbody>
-            </table>
-            <div style="text-align: right; margin-top: 15px; font-size: 18px; color: #0d1b2a;">
-              <strong>Total Estimado: ${totalFormatted}</strong>
-            </div>
-            <p style="font-size: 13px; color: #666; margin-top: 20px;">* Los precios están sujetos a modificaciones y el costo de envío se acuerda según la localidad.</p>
-
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 25px; text-align: center; font-size: 13px; color: #555;">
-              <p style="margin: 0;">Si tenés alguna duda o consulta, podés responder directamente a este correo o escribirnos a <a href="mailto:contacto@editorialaguilera.com.ar" style="color: #d4af37;">contacto@editorialaguilera.com.ar</a>.</p>
-            </div>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 25px; text-align: center; font-size: 13px; color: #555;">
+            <p style="margin: 0;">Si tenés alguna duda o consulta, podés responder directamente a este correo o escribirnos a <a href="mailto:contacto@editorialaguilera.com.ar" style="color: #d4af37;">contacto@editorialaguilera.com.ar</a>.</p>
           </div>
         </div>
-      `
-    };
+      </div>
+    `;
 
-    if (!process.env.SMTP_PASS) {
-      console.error('❌ Error: Falta configurar la variable de entorno SMTP_PASS en Vercel.');
-      return res.status(500).json({ error: 'El servidor no tiene configurada la contraseña del correo de salida (SMTP_PASS en Vercel).' });
+    // Enviar a ventas
+    const { error: errorAdmin } = await resend.emails.send({
+      from: fromEmail,
+      to: ['ventas@editorialaguilera.com.ar'],
+      replyTo: cliente.email,
+      subject: `🛒 Nuevo Pedido Web de ${cliente.nombre}`,
+      html: orderHtmlForAdmin,
+    });
+
+    if (errorAdmin) {
+      console.error('❌ Error enviando mail a ventas:', errorAdmin);
+      return res.status(500).json({ error: `Error de Resend: ${errorAdmin.message}` });
     }
 
-    await Promise.all([
-      transporter.sendMail(mailToVentas),
-      transporter.sendMail(mailToCliente)
-    ]);
+    // Enviar al cliente
+    const { error: errorCustomer } = await resend.emails.send({
+      from: fromEmail,
+      to: [cliente.email],
+      replyTo: 'contacto@editorialaguilera.com.ar',
+      subject: `📚 Confirmación de Pedido - Editorial Aguilera`,
+      html: orderHtmlForCustomer,
+    });
 
-    console.log(`✅ Emails de pedido enviados desde ${senderEmail} a ventas@editorialaguilera.com.ar y a ${cliente.email}`);
+    if (errorCustomer) {
+      console.warn('⚠️ Error enviando mail al cliente:', errorCustomer);
+    }
+
+    console.log(`✅ Pedido procesado exitosamente vía Resend para ${cliente.nombre} (${cliente.email})`);
     return res.status(200).json({ success: true, message: 'Pedido recibido con éxito' });
   } catch (error) {
     console.error('❌ Error al enviar correos de pedido:', error);
