@@ -17,11 +17,6 @@ export default function Footer({ onNavigate }) {
               
               {/* Social */}
               <div className="footer__social">
-                <a href="#" aria-label="Facebook Editorial Aguilera" className="footer__social-link" id="footer-facebook">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
-                  </svg>
-                </a>
                 <a href="#" aria-label="Instagram Editorial Aguilera" className="footer__social-link" id="footer-instagram">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
@@ -80,11 +75,10 @@ export default function Footer({ onNavigate }) {
       <div className="footer__bottom">
         <div className="container">
           <div className="footer__bottom-inner">
-            <p>© 2025 Editorial Aguilera. Todos los derechos reservados. · CABA, Argentina</p>
+            <p>© 2026 Editorial Aguilera. Todos los derechos reservados. · Hurlingham, Buenos Aires, Argentina</p>
             <div className="footer__bottom-links">
               <button className="footer__bottom-link">Términos y condiciones</button>
               <button className="footer__bottom-link">Política de privacidad</button>
-              <button className="footer__bottom-link">Botón de arrepentimiento</button>
               <a
                 href="https://www.mavdigital.com.ar"
                 target="_blank"
