@@ -76,6 +76,8 @@ export default function HomePage({ onNavigate }) {
     return <img src={iconPath} alt={label} className="cat-bar__img-icon" />;
   };
 
+  const promoBook = books.find(b => b.precioAnterior) || books.find(b => b.masVendido) || books[0];
+
   return (
     <main id="main-content">
       {/* HERO */}
@@ -203,35 +205,44 @@ export default function HomePage({ onNavigate }) {
       </section>
 
       {/* PROMO BANNER */}
-      <section className="promo-banner" aria-label="Oferta especial">
-        <div className="container">
-          <div className="promo-banner__inner">
-            <div className="promo-banner__text">
-              <p className="promo-banner__tag">OFERTA DE LA SEMANA</p>
-              <h2 className="promo-banner__title">
-                Guía de Estudio — Derecho Laboral
-              </h2>
-              <p className="promo-banner__desc">
-                12ª edición actualizada · Dr. Julio A. Grisolia · 380 páginas
-              </p>
-              <div className="promo-banner__price">
-                <span className="promo-banner__price-val">{formatPrecio(28000)}</span>
-                <span className="promo-banner__price-label">precio de lista</span>
+      {promoBook && (
+        <section className="promo-banner" aria-label="Oferta especial">
+          <div className="container">
+            <div className="promo-banner__inner">
+              <div className="promo-banner__text">
+                <p className="promo-banner__tag">
+                  {promoBook.precioAnterior ? 'OFERTA DESTACADA' : 'DESTACADO DE LA SEMANA'}
+                </p>
+                <h2 className="promo-banner__title">
+                  {promoBook.titulo}
+                </h2>
+                <p className="promo-banner__desc">
+                  {promoBook.edicion} · {promoBook.autor} · {promoBook.paginas} páginas
+                </p>
+                <div className="promo-banner__price">
+                  {promoBook.precioAnterior && (
+                    <span className="promo-banner__price-old" style={{ textDecoration: 'line-through', opacity: 0.65, fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', marginRight: '8px' }}>
+                      {formatPrecio(promoBook.precioAnterior)}
+                    </span>
+                  )}
+                  <span className="promo-banner__price-val">{formatPrecio(promoBook.precio)}</span>
+                  <span className="promo-banner__price-label">precio de lista</span>
+                </div>
+                <button
+                  id="promo-banner-cta"
+                  className="btn btn-primary"
+                  onClick={() => onNavigate('book-detail', { book: promoBook })}
+                >
+                  Ver ficha completa →
+                </button>
               </div>
-              <button
-                id="promo-banner-cta"
-                className="btn btn-primary"
-                onClick={() => onNavigate('book-detail', { book: books.find(b => b.id === 12) })}
-              >
-                Ver ficha completa →
-              </button>
-            </div>
-            <div className="promo-banner__img-wrap">
-              <img src="/book_penal.png" alt="Guía de Estudio Derecho Laboral" className="promo-banner__img" />
+              <div className="promo-banner__img-wrap">
+                <img src={promoBook.portada} alt={`Portada de ${promoBook.titulo}`} className="promo-banner__img" />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* POR MATERIA */}
       <section className="section by-subject" aria-label="Libros por materia">
