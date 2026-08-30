@@ -5,6 +5,11 @@ import './AdminPage.css';
 const MATERIAS = ['civil', 'penal', 'comercial', 'laboral', 'constitucional',
   'administrativo', 'procesal', 'familia', 'tributario', 'daños', 'internacional'];
 
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
 const EMPTY_FORM = {
   titulo: '', autor: '', materia: 'civil', precio: '', precioAnterior: '',
   formato: 'papel', anio: new Date().getFullYear(), edicion: '', paginas: '',
@@ -36,7 +41,11 @@ export default function AdminPage({ onNavigate }) {
 
   // Tabs de Administración: 'dashboard' | 'books' | 'subscribers'
   const [adminTab, setAdminTab] = useState('dashboard');
-  const [dashboardSubTab, setDashboardSubTab] = useState('pedidos'); // 'pedidos' | 'ranking' | 'clientes'
+  const [dashboardSubTab, setDashboardSubTab] = useState('pedidos'); // 'pedidos' | 'ranking' | 'clientes' | 'avanzadas'
+
+  // Drill-down para Estadísticas Avanzadas: Año -> Mes
+  const [statsYear, setStatsYear] = useState(null);
+  const [statsMonth, setStatsMonth] = useState(null);
 
   // Suscriptores
   const [subscribers, setSubscribers] = useState([]);
@@ -216,10 +225,10 @@ export default function AdminPage({ onNavigate }) {
     }
   };
 
-  const exportOrdersCSV = () => {
-    if (!orders.length) return;
+  const exportOrdersCSV = (ordersToExport = orders, filename = 'pedidos_editorial_aguilera') => {
+    if (!ordersToExport.length) return;
     const csvHeader = "\uFEFFID,Fecha,Cliente,Email,Telefono,Direccion,Notas Cliente,Estado,Items,Total,Notas Admin\n";
-    const csvRows = orders.map(o => {
+    const csvRows = ordersToExport.map(o => {
       const fecha = new Date(o.createdAt).toLocaleString('es-AR');
       const itemsList = o.items.map(it => `${it.qty}x ${it.titulo}`).join(' | ');
       return `"${o._id.toString().slice(-6).toUpperCase()}","${fecha}","${o.cliente.nombre}","${o.cliente.email}","${o.cliente.telefono}","${o.cliente.direccion || ''}","${(o.cliente.notas || '').replace(/"/g, '""')}","${o.estado}","${itemsList.replace(/"/g, '""')}","${o.total}","${(o.notasAdmin || '').replace(/"/g, '""')}"`;
@@ -229,7 +238,7 @@ export default function AdminPage({ onNavigate }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `pedidos_editorial_aguilera_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -377,7 +386,7 @@ export default function AdminPage({ onNavigate }) {
     titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
 
-  // Filtrado de pedidos
+  // Filtrado de pedidos para la tabla general
   const filteredOrders = orders.filter(order => {
     const matchStatus = orderStatusFilter === 'todos' || order.estado === orderStatusFilter;
     if (!matchStatus) return false;
@@ -391,6 +400,87 @@ export default function AdminPage({ onNavigate }) {
     const matchBook = order.items.some(it => it.titulo.toLowerCase().includes(term));
     return matchClient || matchId || matchBook;
   });
+
+  // --- Agrupación para Estadísticas Avanzadas (Año -> Mes) ---
+  const currentYear = new Date().getFullYear();
+  const yearlyStatsMap = {};
+
+  orders.forEach(order => {
+    if (order.estado === 'cancelado') return;
+    const date = new Date(order.createdAt);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    if (!yearlyStatsMap[year]) {
+      yearlyStatsMap[year] = {
+        year,
+        totalVentas: 0,
+        totalPedidos: 0,
+        totalLibros: 0,
+        meses: Array.from({ length: 12 }, (_, i) => ({
+          monthIndex: i,
+          nombre: MESES[i],
+          totalVentas: 0,
+          totalPedidos: 0,
+          totalLibros: 0,
+          orders: [],
+          bookStats: {}
+        }))
+      };
+    }
+
+    const yData = yearlyStatsMap[year];
+    const mData = yData.meses[month];
+
+    yData.totalVentas += order.total;
+    yData.totalPedidos += 1;
+    mData.totalVentas += order.total;
+    mData.totalPedidos += 1;
+    mData.orders.push(order);
+
+    order.items.forEach(it => {
+      const qty = it.qty || 1;
+      yData.totalLibros += qty;
+      mData.totalLibros += qty;
+      const bKey = it.id || it.titulo;
+      if (!mData.bookStats[bKey]) {
+        mData.bookStats[bKey] = {
+          id: it.id,
+          titulo: it.titulo,
+          autor: it.autor || '',
+          portada: it.portada || '',
+          unidades: 0,
+          facturado: 0
+        };
+      }
+      mData.bookStats[bKey].unidades += qty;
+      mData.bookStats[bKey].facturado += (it.precio * qty);
+    });
+  });
+
+  // Asegurar al menos el año actual en la lista
+  if (!yearlyStatsMap[currentYear]) {
+    yearlyStatsMap[currentYear] = {
+      year: currentYear,
+      totalVentas: 0,
+      totalPedidos: 0,
+      totalLibros: 0,
+      meses: Array.from({ length: 12 }, (_, i) => ({
+        monthIndex: i,
+        nombre: MESES[i],
+        totalVentas: 0,
+        totalPedidos: 0,
+        totalLibros: 0,
+        orders: [],
+        bookStats: {}
+      }))
+    };
+  }
+
+  const availableYears = Object.values(yearlyStatsMap).sort((a, b) => b.year - a.year);
+  const selectedYearData = statsYear ? yearlyStatsMap[statsYear] : null;
+  const selectedMonthData = (selectedYearData && statsMonth !== null) ? selectedYearData.meses[statsMonth] : null;
+  const monthBooksRanking = selectedMonthData ? Object.values(selectedMonthData.bookStats).sort((a, b) => b.unidades - a.unidades) : [];
 
   if (!authed) {
     return (
@@ -464,7 +554,7 @@ export default function AdminPage({ onNavigate }) {
           ========================================== */}
       {adminTab === 'dashboard' && (
         <div className="admin-dashboard-container">
-          {/* Tarjetas KPI */}
+          {/* Tarjetas KPI Principales */}
           <div className="admin-kpi-grid">
             <div className="kpi-card kpi-card--gold">
               <div className="kpi-card__icon">💰</div>
@@ -526,10 +616,19 @@ export default function AdminPage({ onNavigate }) {
                 📋 Listado de Pedidos ({orders.length})
               </button>
               <button
+                className={`dashboard-subnav__btn ${dashboardSubTab === 'avanzadas' ? 'active' : ''}`}
+                onClick={() => {
+                  setDashboardSubTab('avanzadas');
+                  if (!statsYear) setStatsYear(currentYear);
+                }}
+              >
+                📈 Estadísticas Avanzadas (Año / Mes)
+              </button>
+              <button
                 className={`dashboard-subnav__btn ${dashboardSubTab === 'ranking' ? 'active' : ''}`}
                 onClick={() => setDashboardSubTab('ranking')}
               >
-                🏆 Ranking de Libros Más Vendidos
+                🏆 Ranking Global de Libros
               </button>
               <button
                 className={`dashboard-subnav__btn ${dashboardSubTab === 'clientes' ? 'active' : ''}`}
@@ -541,7 +640,7 @@ export default function AdminPage({ onNavigate }) {
 
             <div className="dashboard-subnav__actions">
               {dashboardSubTab === 'pedidos' && (
-                <button className="btn-export-csv" onClick={exportOrdersCSV} disabled={orders.length === 0}>
+                <button className="btn-export-csv" onClick={() => exportOrdersCSV()} disabled={orders.length === 0}>
                   📥 Exportar Pedidos (CSV)
                 </button>
               )}
@@ -553,7 +652,7 @@ export default function AdminPage({ onNavigate }) {
             </div>
           </div>
 
-          {/* SUBTAB: LISTADO DE PEDIDOS */}
+          {/* SUBTAB 1: LISTADO DE PEDIDOS */}
           {dashboardSubTab === 'pedidos' && (
             <section className="admin-list-section">
               {/* Filtros y Buscador */}
@@ -718,13 +817,323 @@ export default function AdminPage({ onNavigate }) {
             </section>
           )}
 
-          {/* SUBTAB: RANKING DE LIBROS MÁS VENDIDOS */}
+          {/* SUBTAB 2: ESTADÍSTICAS AVANZADAS (AÑO -> MES -> DETALLE) */}
+          {dashboardSubTab === 'avanzadas' && (
+            <section className="admin-list-section">
+              {/* Breadcrumbs de Navegación */}
+              <div className="advanced-breadcrumbs">
+                <button
+                  className={`breadcrumb-item ${!statsYear ? 'active' : ''}`}
+                  onClick={() => { setStatsYear(null); setStatsMonth(null); }}
+                >
+                  📅 Años
+                </button>
+                {statsYear && (
+                  <>
+                    <span className="breadcrumb-sep">/</span>
+                    <button
+                      className={`breadcrumb-item ${statsMonth === null ? 'active' : ''}`}
+                      onClick={() => setStatsMonth(null)}
+                    >
+                      Año {statsYear}
+                    </button>
+                  </>
+                )}
+                {statsYear && statsMonth !== null && (
+                  <>
+                    <span className="breadcrumb-sep">/</span>
+                    <span className="breadcrumb-item active">
+                      {MESES[statsMonth]} {statsYear}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* NIVEL 1: VISTA DE AÑOS */}
+              {!statsYear && (
+                <div className="drilldown-view">
+                  <div className="admin-section-header">
+                    <div>
+                      <h2>Seleccioná un año para ver estadísticas mensuales</h2>
+                      <p className="admin-section-sub">Resumen de ventas anuales consolidado.</p>
+                    </div>
+                  </div>
+
+                  <div className="years-cards-grid">
+                    {availableYears.map(y => (
+                      <div
+                        key={y.year}
+                        className="year-card"
+                        onClick={() => setStatsYear(y.year)}
+                      >
+                        <div className="year-card__header">
+                          <span className="year-card__number">{y.year}</span>
+                          <span className="year-card__badge">{y.totalPedidos} pedidos</span>
+                        </div>
+                        <div className="year-card__body">
+                          <div className="year-card__stat">
+                            <span className="stat-label">Facturación Anual</span>
+                            <span className="stat-value">${y.totalVentas.toLocaleString('es-AR')}</span>
+                          </div>
+                          <div className="year-card__stat">
+                            <span className="stat-label">Libros Vendidos</span>
+                            <span className="stat-value">{y.totalLibros} ej.</span>
+                          </div>
+                        </div>
+                        <button className="year-card__btn">
+                          Explorar meses de {y.year} →
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* NIVEL 2: VISTA DE MESES DEL AÑO SELECCIONADO */}
+              {statsYear && statsMonth === null && selectedYearData && (
+                <div className="drilldown-view">
+                  <div className="admin-section-header">
+                    <div>
+                      <h2>Ventas Mensuales — Año {statsYear}</h2>
+                      <p className="admin-section-sub">Hacé clic en cualquier mes para ver su detalle completo.</p>
+                    </div>
+                    <button
+                      className="btn-export-csv"
+                      style={{ background: '#1a1a2e', color: '#fff', border: '1px solid #444' }}
+                      onClick={() => setStatsYear(null)}
+                    >
+                      ← Cambiar de año
+                    </button>
+                  </div>
+
+                  {/* Resumen Anual Header */}
+                  <div className="year-summary-bar">
+                    <div className="summary-item">
+                      <span>Total Anual {statsYear}:</span>
+                      <strong>${selectedYearData.totalVentas.toLocaleString('es-AR')}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>Total Pedidos:</span>
+                      <strong>{selectedYearData.totalPedidos}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>Ejemplares:</span>
+                      <strong>{selectedYearData.totalLibros} libros</strong>
+                    </div>
+                  </div>
+
+                  <div className="months-cards-grid">
+                    {selectedYearData.meses.map(m => {
+                      const hasSales = m.totalVentas > 0;
+                      const maxMonthSales = Math.max(...selectedYearData.meses.map(it => it.totalVentas), 1);
+                      const percent = Math.round((m.totalVentas / maxMonthSales) * 100);
+
+                      return (
+                        <div
+                          key={m.monthIndex}
+                          className={`month-card ${hasSales ? 'month-card--active' : 'month-card--empty'}`}
+                          onClick={() => setStatsMonth(m.monthIndex)}
+                        >
+                          <div className="month-card__header">
+                            <h3 className="month-card__title">{m.nombre}</h3>
+                            {hasSales && (
+                              <span className="month-card__badge">{m.totalPedidos} ped.</span>
+                            )}
+                          </div>
+
+                          <div className="month-card__body">
+                            <div className="month-card__amount">
+                              ${m.totalVentas.toLocaleString('es-AR')}
+                            </div>
+                            <span className="month-card__books-count">
+                              {hasSales ? `${m.totalLibros} libros vendidos` : 'Sin movimientos'}
+                            </span>
+
+                            {hasSales && (
+                              <div className="month-card__progress">
+                                <div className="month-card__progress-fill" style={{ width: `${percent}%` }} />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="month-card__footer">
+                            <span>Ver detalle del mes →</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* NIVEL 3: DETALLE COMPLETO DEL MES SELECCIONADO */}
+              {statsYear && statsMonth !== null && selectedMonthData && (
+                <div className="drilldown-view">
+                  <div className="admin-section-header">
+                    <div>
+                      <h2>Detalle de Ventas — {selectedMonthData.nombre} {statsYear}</h2>
+                      <p className="admin-section-sub">Información transaccional y ranking exclusivo del mes.</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button
+                        className="btn-export-csv"
+                        onClick={() => exportOrdersCSV(selectedMonthData.orders, `pedidos_${selectedMonthData.nombre.toLowerCase()}_${statsYear}`)}
+                        disabled={selectedMonthData.orders.length === 0}
+                      >
+                        📥 Exportar Reporte de {selectedMonthData.nombre} (CSV)
+                      </button>
+                      <button
+                        className="btn-export-csv"
+                        style={{ background: '#1a1a2e', color: '#fff', border: '1px solid #444' }}
+                        onClick={() => setStatsMonth(null)}
+                      >
+                        ← Volver a meses de {statsYear}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* KPIs del Mes */}
+                  <div className="month-kpi-grid">
+                    <div className="month-kpi-card">
+                      <span className="month-kpi-label">Facturación de {selectedMonthData.nombre}</span>
+                      <span className="month-kpi-val month-kpi-val--gold">
+                        ${selectedMonthData.totalVentas.toLocaleString('es-AR')}
+                      </span>
+                    </div>
+                    <div className="month-kpi-card">
+                      <span className="month-kpi-label">Pedidos en el Mes</span>
+                      <span className="month-kpi-val">{selectedMonthData.totalPedidos}</span>
+                    </div>
+                    <div className="month-kpi-card">
+                      <span className="month-kpi-label">Libros Vendidos</span>
+                      <span className="month-kpi-val">{selectedMonthData.totalLibros} ej.</span>
+                    </div>
+                    <div className="month-kpi-card">
+                      <span className="month-kpi-label">Ticket Promedio</span>
+                      <span className="month-kpi-val">
+                        ${selectedMonthData.totalPedidos > 0 ? Math.round(selectedMonthData.totalVentas / selectedMonthData.totalPedidos).toLocaleString('es-AR') : 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Top Libros del Mes */}
+                  <div className="month-detail-block">
+                    <h3>🏆 Libros Más Vendidos en {selectedMonthData.nombre} {statsYear}</h3>
+                    {monthBooksRanking.length === 0 ? (
+                      <p className="admin-empty-sub">No se registraron ventas en este mes.</p>
+                    ) : (
+                      <table className="admin-table" style={{ marginTop: '12px' }}>
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Portada</th>
+                            <th>Título</th>
+                            <th>Autor</th>
+                            <th>Unidades</th>
+                            <th>Recaudación Mes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {monthBooksRanking.map((b, idx) => (
+                            <tr key={idx}>
+                              <td><span className="order-id-badge">#{idx + 1}</span></td>
+                              <td>
+                                {b.portada ? <img src={b.portada} alt={b.titulo} className="admin-thumb" /> : <span className="no-img">Sin imagen</span>}
+                              </td>
+                              <td><strong>{b.titulo}</strong></td>
+                              <td>{b.autor}</td>
+                              <td><strong>{b.unidades} ej.</strong></td>
+                              <td><strong className="order-total-amount">${b.facturado.toLocaleString('es-AR')}</strong></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  {/* Listado de Pedidos del Mes */}
+                  <div className="month-detail-block">
+                    <h3>📋 Todas las Órdenes de {selectedMonthData.nombre} {statsYear} ({selectedMonthData.orders.length})</h3>
+                    {selectedMonthData.orders.length === 0 ? (
+                      <div className="admin-empty">
+                        <span>📭 No hubo pedidos registrados durante este mes.</span>
+                      </div>
+                    ) : (
+                      <table className="admin-table" style={{ marginTop: '12px' }}>
+                        <thead>
+                          <tr>
+                            <th>N° Pedido</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Contacto</th>
+                            <th>Libros</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedMonthData.orders.map(order => {
+                            const statusObj = ESTADOS_ORDEN.find(s => s.id === order.estado) || ESTADOS_ORDEN[0];
+                            return (
+                              <tr key={order._id}>
+                                <td><span className="order-id-badge">#{order._id.toString().slice(-6).toUpperCase()}</span></td>
+                                <td className="order-date-cell">
+                                  {new Date(order.createdAt).toLocaleDateString('es-AR', {
+                                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                                  })}
+                                </td>
+                                <td><strong>{order.cliente.nombre}</strong></td>
+                                <td>
+                                  <div className="order-contact-col">
+                                    <a href={`mailto:${order.cliente.email}`} className="order-email-link">✉️ {order.cliente.email}</a>
+                                    <a href={`tel:${order.cliente.telefono}`} className="order-phone-link">📞 {order.cliente.telefono}</a>
+                                  </div>
+                                </td>
+                                <td>{order.items.reduce((acc, it) => acc + it.qty, 0)} libro(s)</td>
+                                <td><strong className="order-total-amount">${order.total.toLocaleString('es-AR')}</strong></td>
+                                <td>
+                                  <select
+                                    className="order-status-select"
+                                    value={order.estado}
+                                    style={{ color: statusObj.color, backgroundColor: statusObj.bg, borderColor: statusObj.color }}
+                                    onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
+                                  >
+                                    {ESTADOS_ORDEN.map(s => (
+                                      <option key={s.id} value={s.id}>{s.label}</option>
+                                    ))}
+                                  </select>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn-edit"
+                                    onClick={() => {
+                                      setSelectedOrder(order);
+                                      setAdminNotesEditing(order.notasAdmin || '');
+                                    }}
+                                  >
+                                    👁️ Detalle
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* SUBTAB 3: RANKING GLOBAL DE LIBROS */}
           {dashboardSubTab === 'ranking' && (
             <section className="admin-list-section">
               <div className="admin-section-header">
                 <div>
-                  <h2>🏆 Ranking de Libros Más Vendidos</h2>
-                  <p className="admin-section-sub">Títulos con mayor volumen de venta y recaudación.</p>
+                  <h2>🏆 Ranking Global de Libros Más Vendidos</h2>
+                  <p className="admin-section-sub">Títulos con mayor volumen de venta y recaudación histórica.</p>
                 </div>
               </div>
 
@@ -793,7 +1202,7 @@ export default function AdminPage({ onNavigate }) {
             </section>
           )}
 
-          {/* SUBTAB: DIRECTORIO DE CLIENTES */}
+          {/* SUBTAB 4: DIRECTORIO DE CLIENTES */}
           {dashboardSubTab === 'clientes' && (
             <section className="admin-list-section">
               <div className="admin-section-header">

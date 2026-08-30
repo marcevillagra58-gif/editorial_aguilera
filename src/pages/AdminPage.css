@@ -822,3 +822,346 @@ textarea.admin-input { resize: vertical; }
   gap: 12px;
 }
 
+/* =============================================
+   ESTADÍSTICAS AVANZADAS: DRILL-DOWN (AÑO -> MES)
+   ============================================= */
+
+/* ── Breadcrumbs ── */
+.advanced-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #141424;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid #2a2a4a;
+  margin-bottom: 24px;
+}
+
+.breadcrumb-item {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.breadcrumb-item:hover {
+  color: #fff;
+}
+
+.breadcrumb-item.active {
+  color: #c9a84c;
+  cursor: default;
+}
+
+.breadcrumb-sep {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+/* ── Drill-down Views ── */
+.drilldown-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Year Cards Grid ── */
+.years-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.year-card {
+  background: #141424;
+  border: 1px solid #2a2a4a;
+  border-radius: 14px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.year-card:hover {
+  transform: translateY(-3px);
+  border-color: #c9a84c;
+  box-shadow: 0 8px 24px rgba(201, 168, 76, 0.15);
+}
+
+.year-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.year-card__number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #c9a84c;
+  font-family: 'Playfair Display', serif, sans-serif;
+}
+
+.year-card__badge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.year-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.year-card__stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #2a2a4a;
+}
+
+.year-card__stat .stat-label {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.year-card__stat .stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.year-card__btn {
+  margin-top: 4px;
+  padding: 10px;
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  color: #c9a84c;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.year-card:hover .year-card__btn {
+  background: #c9a84c;
+  color: #0d0d0d;
+  border-color: #c9a84c;
+}
+
+/* ── Year Summary Bar ── */
+.year-summary-bar {
+  display: flex;
+  gap: 24px;
+  background: #141424;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid #2a2a4a;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #888;
+}
+
+.summary-item strong {
+  font-size: 1.2rem;
+  color: #c9a84c;
+}
+
+/* ── Months Grid ── */
+.months-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.month-card {
+  background: #141424;
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 140px;
+}
+
+.month-card:hover {
+  transform: translateY(-2px);
+  border-color: #4a4a7a;
+}
+
+.month-card--active {
+  border-color: rgba(201, 168, 76, 0.4);
+  background: linear-gradient(145deg, #141424 0%, #1c1a16 100%);
+}
+
+.month-card--active:hover {
+  border-color: #c9a84c;
+  box-shadow: 0 6px 18px rgba(201, 168, 76, 0.12);
+}
+
+.month-card--empty {
+  opacity: 0.6;
+}
+
+.month-card--empty:hover {
+  opacity: 1;
+}
+
+.month-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.month-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.month-card--active .month-card__title {
+  color: #e0c070;
+}
+
+.month-card__badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.month-card__amount {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'Playfair Display', serif, sans-serif;
+}
+
+.month-card--active .month-card__amount {
+  color: #c9a84c;
+}
+
+.month-card__books-count {
+  font-size: 0.78rem;
+  color: #888;
+  display: block;
+  margin-top: 2px;
+}
+
+.month-card__progress {
+  width: 100%;
+  height: 4px;
+  background: #0d0d0d;
+  border-radius: 2px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.month-card__progress-fill {
+  height: 100%;
+  background: #c9a84c;
+  border-radius: 2px;
+}
+
+.month-card__footer {
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 600;
+  padding-top: 8px;
+  border-top: 1px solid #1f1f38;
+  display: flex;
+  justify-content: flex-end;
+  transition: color 0.2s;
+}
+
+.month-card:hover .month-card__footer {
+  color: #c9a84c;
+}
+
+/* ── Month Detail Level ── */
+.month-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.month-kpi-card {
+  background: #141424;
+  border: 1px solid #2a2a4a;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.month-kpi-label {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.month-kpi-val {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'Playfair Display', serif, sans-serif;
+}
+
+.month-kpi-val--gold {
+  color: #c9a84c;
+}
+
+.month-detail-block {
+  background: #141424;
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.month-detail-block h3 {
+  margin: 0;
+  color: #c9a84c;
+  font-size: 1.15rem;
+  border-bottom: 1px solid #2a2a4a;
+  padding-bottom: 12px;
+}
+
+.admin-empty-sub {
+  color: #777;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  font-style: italic;
+}
+
+
