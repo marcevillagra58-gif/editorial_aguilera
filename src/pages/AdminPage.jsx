@@ -61,6 +61,11 @@ export default function AdminPage({ onNavigate }) {
   const [deleteOrderConfirm, setDeleteOrderConfirm] = useState(null);
   const [adminNotesEditing, setAdminNotesEditing] = useState('');
 
+  // Facturación ARCA
+  const [facturandoId, setFacturandoId] = useState(null);
+  const [enviandoFacturaId, setEnviandoFacturaId] = useState(null);
+  const [invoiceOrderToPrint, setInvoiceOrderToPrint] = useState(null);
+
   const fileRef = useRef();
   const headers = { 'Content-Type': 'application/json', 'x-admin-password': pass };
 
@@ -162,6 +167,61 @@ export default function AdminPage({ onNavigate }) {
     setExitModal({ dest, params });
   };
 
+  // --- Manejo de Facturación ARCA ---
+  const handleFacturarOrder = async (orderId) => {
+    setFacturandoId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/facturar`, {
+        method: 'POST',
+        headers
+      });
+      const data = await res.json();
+      setFacturandoId(null);
+      if (res.ok && data.success) {
+        setMsg(`🧾 ¡Factura emitida con éxito en ARCA! (CAE: ${data.factura.cae})`);
+        loadOrders();
+        loadStats();
+        if (selectedOrder && selectedOrder._id === orderId) {
+          setSelectedOrder(data.order);
+        }
+        setTimeout(() => setMsg(''), 5000);
+      } else {
+        setMsg('❌ Error al facturar en ARCA: ' + (data.error || 'Desconocido'));
+      }
+    } catch (e) {
+      setFacturandoId(null);
+      setMsg('❌ Error de conexión al conectar con ARCA');
+    }
+  };
+
+  const handleEnviarFactura = async (orderId) => {
+    setEnviandoFacturaId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/enviar-factura`, {
+        method: 'POST',
+        headers
+      });
+      const data = await res.json();
+      setEnviandoFacturaId(null);
+      if (res.ok && data.success) {
+        setMsg('✉️ Factura Electrónica enviada al cliente con éxito');
+        loadOrders();
+        if (selectedOrder && selectedOrder._id === orderId) {
+          setSelectedOrder(prev => ({
+            ...prev,
+            factura: { ...prev.factura, enviada: true, fechaEnvio: new Date() }
+          }));
+        }
+        setTimeout(() => setMsg(''), 4000);
+      } else {
+        setMsg('❌ Error al enviar factura: ' + (data.error || 'Desconocido'));
+      }
+    } catch (e) {
+      setEnviandoFacturaId(null);
+      setMsg('❌ Error de conexión al enviar factura');
+    }
+  };
+
   // --- Manejo de Pedidos ---
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -227,11 +287,13 @@ export default function AdminPage({ onNavigate }) {
 
   const exportOrdersCSV = (ordersToExport = orders, filename = 'pedidos_editorial_aguilera') => {
     if (!ordersToExport.length) return;
-    const csvHeader = "\uFEFFID,Fecha,Cliente,Email,Telefono,Direccion,Notas Cliente,Estado,Items,Total,Notas Admin\n";
+    const csvHeader = "\uFEFFID,Fecha,Cliente,Email,Telefono,Direccion,Notas Cliente,Estado,Factura Emitida,CAE,Items,Total,Notas Admin\n";
     const csvRows = ordersToExport.map(o => {
       const fecha = new Date(o.createdAt).toLocaleString('es-AR');
       const itemsList = o.items.map(it => `${it.qty}x ${it.titulo}`).join(' | ');
-      return `"${o._id.toString().slice(-6).toUpperCase()}","${fecha}","${o.cliente.nombre}","${o.cliente.email}","${o.cliente.telefono}","${o.cliente.direccion || ''}","${(o.cliente.notas || '').replace(/"/g, '""')}","${o.estado}","${itemsList.replace(/"/g, '""')}","${o.total}","${(o.notasAdmin || '').replace(/"/g, '""')}"`;
+      const caeStr = o.factura?.cae || 'No facturado';
+      const factEmitida = o.factura?.emitida ? 'SI' : 'NO';
+      return `"${o._id.toString().slice(-6).toUpperCase()}","${fecha}","${o.cliente.nombre}","${o.cliente.email}","${o.cliente.telefono}","${o.cliente.direccion || ''}","${(o.cliente.notas || '').replace(/"/g, '""')}","${o.estado}","${factEmitida}","${caeStr}","${itemsList.replace(/"/g, '""')}","${o.total}","${(o.notasAdmin || '').replace(/"/g, '""')}"`;
     }).join("\n");
 
     const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
@@ -713,13 +775,14 @@ export default function AdminPage({ onNavigate }) {
                         <th>Contacto</th>
                         <th>Libros Solicitados</th>
                         <th>Total</th>
-                        <th>Estado</th>
+                        <th>Estado / Factura</th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredOrders.map(order => {
                         const statusObj = ESTADOS_ORDEN.find(s => s.id === order.estado) || ESTADOS_ORDEN[0];
+                        const isFacturado = order.factura && order.factura.emitida;
                         return (
                           <tr key={order._id}>
                             <td>
@@ -766,16 +829,32 @@ export default function AdminPage({ onNavigate }) {
                               </strong>
                             </td>
                             <td>
-                              <select
-                                className="order-status-select"
-                                value={order.estado}
-                                style={{ color: statusObj.color, backgroundColor: statusObj.bg, borderColor: statusObj.color }}
-                                onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                              >
-                                {ESTADOS_ORDEN.map(s => (
-                                  <option key={s.id} value={s.id}>{s.label}</option>
-                                ))}
-                              </select>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <select
+                                  className="order-status-select"
+                                  value={order.estado}
+                                  style={{ color: statusObj.color, backgroundColor: statusObj.bg, borderColor: statusObj.color }}
+                                  onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
+                                >
+                                  {ESTADOS_ORDEN.map(s => (
+                                    <option key={s.id} value={s.id}>{s.label}</option>
+                                  ))}
+                                </select>
+                                {isFacturado ? (
+                                  <span className="badge-factura-emitida" title={`CAE: ${order.factura.cae}`}>
+                                    🧾 Factura {order.factura.letra} N° {String(order.factura.numeroComprobante).padStart(8, '0')}
+                                  </span>
+                                ) : (
+                                  <button
+                                    className="btn-quick-facturar"
+                                    onClick={() => handleFacturarOrder(order._id)}
+                                    disabled={facturandoId === order._id}
+                                    title="Emitir Factura Electrónica en ARCA"
+                                  >
+                                    {facturandoId === order._id ? '⏳ Facturando...' : '🧾 FACTURAR'}
+                                  </button>
+                                )}
+                              </div>
                             </td>
                             <td className="admin-actions">
                               <button
@@ -1068,13 +1147,14 @@ export default function AdminPage({ onNavigate }) {
                             <th>Contacto</th>
                             <th>Libros</th>
                             <th>Total</th>
-                            <th>Estado</th>
+                            <th>Estado / Factura</th>
                             <th>Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
                           {selectedMonthData.orders.map(order => {
                             const statusObj = ESTADOS_ORDEN.find(s => s.id === order.estado) || ESTADOS_ORDEN[0];
+                            const isFacturado = order.factura && order.factura.emitida;
                             return (
                               <tr key={order._id}>
                                 <td><span className="order-id-badge">#{order._id.toString().slice(-6).toUpperCase()}</span></td>
@@ -1093,16 +1173,19 @@ export default function AdminPage({ onNavigate }) {
                                 <td>{order.items.reduce((acc, it) => acc + it.qty, 0)} libro(s)</td>
                                 <td><strong className="order-total-amount">${order.total.toLocaleString('es-AR')}</strong></td>
                                 <td>
-                                  <select
-                                    className="order-status-select"
-                                    value={order.estado}
-                                    style={{ color: statusObj.color, backgroundColor: statusObj.bg, borderColor: statusObj.color }}
-                                    onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                                  >
-                                    {ESTADOS_ORDEN.map(s => (
-                                      <option key={s.id} value={s.id}>{s.label}</option>
-                                    ))}
-                                  </select>
+                                  {isFacturado ? (
+                                    <span className="badge-factura-emitida" title={`CAE: ${order.factura.cae}`}>
+                                      🧾 Factura {order.factura.letra} N° {String(order.factura.numeroComprobante).padStart(8, '0')}
+                                    </span>
+                                  ) : (
+                                    <button
+                                      className="btn-quick-facturar"
+                                      onClick={() => handleFacturarOrder(order._id)}
+                                      disabled={facturandoId === order._id}
+                                    >
+                                      {facturandoId === order._id ? '⏳...' : '🧾 FACTURAR'}
+                                    </button>
+                                  )}
                                 </td>
                                 <td>
                                   <button
@@ -1511,6 +1594,68 @@ export default function AdminPage({ onNavigate }) {
             </div>
 
             <div className="order-detail-modal__body">
+              {/* Sección Facturación ARCA */}
+              <div className="order-detail-section order-detail-section--arca">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h3 style={{ margin: 0, border: 'none', padding: 0 }}>🧾 Facturación Electrónica ARCA</h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#aaa' }}>
+                      Ambiente de Homologación / Testing (WSFEv1)
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {selectedOrder.factura?.emitida ? (
+                      <>
+                        <button
+                          className="btn-print-factura"
+                          onClick={() => setInvoiceOrderToPrint(selectedOrder)}
+                        >
+                          🖨️ Ver / Imprimir Factura
+                        </button>
+                        <button
+                          className="btn-enviar-factura"
+                          onClick={() => handleEnviarFactura(selectedOrder._id)}
+                          disabled={enviandoFacturaId === selectedOrder._id}
+                        >
+                          {enviandoFacturaId === selectedOrder._id ? '⏳ Enviando...' : (selectedOrder.factura.enviada ? '✉️ Reenviar al Cliente' : '✉️ ENVIAR FACTURA')}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="btn-facturar-primary"
+                        onClick={() => handleFacturarOrder(selectedOrder._id)}
+                        disabled={facturandoId === selectedOrder._id}
+                      >
+                        {facturandoId === selectedOrder._id ? '⏳ Conectando con ARCA...' : '🧾 FACTURAR AHORA'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {selectedOrder.factura?.emitida && (
+                  <div className="arca-invoice-summary-box">
+                    <div className="arca-info-item">
+                      <span>Comprobante:</span>
+                      <strong>Factura {selectedOrder.factura.letra} N° {String(selectedOrder.factura.puntoVenta).padStart(4, '0')}-{String(selectedOrder.factura.numeroComprobante).padStart(8, '0')}</strong>
+                    </div>
+                    <div className="arca-info-item">
+                      <span>CAE N°:</span>
+                      <strong style={{ color: '#60a5fa' }}>{selectedOrder.factura.cae}</strong>
+                    </div>
+                    <div className="arca-info-item">
+                      <span>Vencimiento CAE:</span>
+                      <strong>{selectedOrder.factura.vencimientoCae}</strong>
+                    </div>
+                    <div className="arca-info-item">
+                      <span>Estado de Envío:</span>
+                      <strong style={{ color: selectedOrder.factura.enviada ? '#34d399' : '#f59e0b' }}>
+                        {selectedOrder.factura.enviada ? '✅ Enviada por Email' : '⏳ Pendiente de envío'}
+                      </strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Sección Datos Comprador */}
               <div className="order-detail-section">
                 <h3>👤 Datos del Comprador</h3>
@@ -1602,6 +1747,121 @@ export default function AdminPage({ onNavigate }) {
                       💾 Guardar Notas
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          MODAL OFICIAL DE FACTURA ELECTRÓNICA IMPRIMIBLE
+          ========================================== */}
+      {invoiceOrderToPrint && invoiceOrderToPrint.factura && (
+        <div className="order-modal-backdrop" onClick={() => setInvoiceOrderToPrint(null)}>
+          <div className="invoice-printable-card" onClick={e => e.stopPropagation()}>
+            <div className="invoice-print-actions no-print">
+              <button className="btn-print-action" onClick={() => window.print()}>
+                🖨️ Imprimir / Guardar en PDF
+              </button>
+              <button className="btn-close-invoice" onClick={() => setInvoiceOrderToPrint(null)}>
+                ✕ Cerrar
+              </button>
+            </div>
+
+            {/* Documento Fiscal Formato Oficial */}
+            <div className="invoice-document" id="invoice-to-print">
+              <div className="invoice-doc-header">
+                <div className="invoice-doc-issuer">
+                  <h2>EDITORIAL AGUILERA</h2>
+                  <p>Razón Social: Editorial Aguilera S.R.L.</p>
+                  <p>Domicilio Comercial: Hurlingham, Buenos Aires, Argentina</p>
+                  <p>Condición frente al IVA: <strong>IVA Responsable Inscripto</strong></p>
+                </div>
+
+                <div className="invoice-doc-letter-box">
+                  <div className="letter-badge">{invoiceOrderToPrint.factura.letra}</div>
+                  <span className="letter-code">COD. 0{invoiceOrderToPrint.factura.tipoComprobante}</span>
+                </div>
+
+                <div className="invoice-doc-meta">
+                  <h3>FACTURA</h3>
+                  <p className="invoice-meta-num">
+                    Punto de Venta: {String(invoiceOrderToPrint.factura.puntoVenta).padStart(4, '0')} Comp. Nro: {String(invoiceOrderToPrint.factura.numeroComprobante).padStart(8, '0')}
+                  </p>
+                  <p>Fecha de Emisión: <strong>{new Date(invoiceOrderToPrint.factura.fechaEmision).toLocaleDateString('es-AR')}</strong></p>
+                  <p>CUIT: <strong>30-71234567-8</strong></p>
+                  <p>Ingresos Brutos: <strong>Exento</strong></p>
+                  <p>Fecha Inicio Actividades: <strong>01/03/1985</strong></p>
+                </div>
+              </div>
+
+              {/* Datos del Receptor */}
+              <div className="invoice-doc-receiver">
+                <div className="receiver-row">
+                  <p><strong>Apellido y Nombre / Razón Social:</strong> {invoiceOrderToPrint.cliente.nombre}</p>
+                  <p><strong>Condición frente al IVA:</strong> Consumidor Final</p>
+                </div>
+                <div className="receiver-row">
+                  <p><strong>Email:</strong> {invoiceOrderToPrint.cliente.email}</p>
+                  <p><strong>Teléfono:</strong> {invoiceOrderToPrint.cliente.telefono}</p>
+                  <p><strong>Domicilio:</strong> {invoiceOrderToPrint.cliente.direccion || '—'}</p>
+                </div>
+              </div>
+
+              {/* Detalle de Productos */}
+              <table className="invoice-doc-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Descripción / Título</th>
+                    <th style={{ textAlign: 'center' }}>Cantidad</th>
+                    <th style={{ textAlign: 'right' }}>Precio Unitario</th>
+                    <th style={{ textAlign: 'right' }}>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoiceOrderToPrint.items.map((it, idx) => (
+                    <tr key={idx}>
+                      <td>#{it.id}</td>
+                      <td><strong>{it.titulo}</strong> ({it.autor})</td>
+                      <td style={{ textAlign: 'center' }}>{it.qty}</td>
+                      <td style={{ textAlign: 'right' }}>${it.precio.toLocaleString('es-AR')}</td>
+                      <td style={{ textAlign: 'right' }}>${(it.precio * it.qty).toLocaleString('es-AR')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Totales */}
+              <div className="invoice-doc-totals">
+                <div className="totals-row">
+                  <span>Importe Total:</span>
+                  <strong>${invoiceOrderToPrint.total.toLocaleString('es-AR')}</strong>
+                </div>
+              </div>
+
+              {/* Pie Fiscal ARCA */}
+              <div className="invoice-doc-footer">
+                <div className="invoice-qr-wrap">
+                  <a href={invoiceOrderToPrint.factura.qrUrl} target="_blank" rel="noreferrer" className="qr-link-box">
+                    <span className="qr-icon-placeholder">📱</span>
+                    <span className="qr-text">Verificar QR Oficial en ARCA</span>
+                  </a>
+                </div>
+
+                <div className="invoice-cae-wrap">
+                  <div className="cae-item">
+                    <span>CAE N°:</span>
+                    <strong>{invoiceOrderToPrint.factura.cae}</strong>
+                  </div>
+                  <div className="cae-item">
+                    <span>Fecha de Vto. de CAE:</span>
+                    <strong>{invoiceOrderToPrint.factura.vencimientoCae}</strong>
+                  </div>
+                  <p className="cae-disclaimer">
+                    Comprobante Autorizado por ARCA (Agencia de Recaudación y Control Aduanero)
+                  </p>
                 </div>
               </div>
             </div>

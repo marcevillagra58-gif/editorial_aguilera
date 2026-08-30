@@ -27,7 +27,21 @@ const orderSchema = new mongoose.Schema({
   },
   notasAdmin: { type: String, default: '' },
   emailSentToVentas: { type: Boolean, default: false },
-  emailSentToCliente: { type: Boolean, default: false }
+  emailSentToCliente: { type: Boolean, default: false },
+  factura: {
+    emitida: { type: Boolean, default: false },
+    tipoComprobante: { type: Number, default: 6 }, // 6 = Factura B (Consumidor Final), 11 = Factura C
+    letra: { type: String, default: 'B' },
+    puntoVenta: { type: Number, default: 1 },
+    numeroComprobante: { type: Number },
+    cae: { type: String },
+    vencimientoCae: { type: String },
+    fechaEmision: { type: Date },
+    qrData: { type: String },
+    qrUrl: { type: String },
+    enviada: { type: Boolean, default: false },
+    fechaEnvio: { type: Date }
+  }
 }, {
   timestamps: true
 });

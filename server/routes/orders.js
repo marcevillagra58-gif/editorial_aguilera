@@ -1,7 +1,7 @@
-// server/routes/orders.js
 import express from 'express';
 import { Resend } from 'resend';
 import Order from '../models/Order.js';
+import { emitirFacturaElectronica } from '../services/arcaService.js';
 
 const router = express.Router();
 
@@ -329,6 +329,177 @@ router.put('/:id', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('❌ Error al actualizar pedido:', error);
     return res.status(500).json({ error: 'Error al actualizar pedido' });
+  }
+});
+
+// POST /api/orders/:id/facturar — Emitir Factura Electrónica ARCA (Homologación / Producción)
+router.post('/:id/facturar', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    if (order.factura && order.factura.emitida) {
+      return res.status(400).json({
+        error: 'El pedido ya cuenta con una factura emitida',
+        factura: order.factura
+      });
+    }
+
+    // Emitir factura a través de ARCA
+    const facturaData = await emitirFacturaElectronica(order);
+
+    order.factura = facturaData;
+    // Si estaba pendiente, se actualiza a 'pagado' o 'facturado'
+    if (order.estado === 'pendiente' || order.estado === 'contactado') {
+      order.estado = 'pagado';
+    }
+
+    await order.save();
+    console.log(`🧾 Factura emitida para orden #${order._id.toString().slice(-6).toUpperCase()}: CAE ${facturaData.cae}`);
+
+    return res.json({
+      success: true,
+      message: 'Factura Electrónica emitida con éxito en ARCA',
+      factura: order.factura,
+      order
+    });
+  } catch (error) {
+    console.error('❌ Error al facturar orden en ARCA:', error);
+    return res.status(500).json({ error: `Error al emitir factura en ARCA: ${error.message}` });
+  }
+});
+
+// POST /api/orders/:id/enviar-factura — Enviar la Factura Electrónica al comprador por email
+router.post('/:id/enviar-factura', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    if (!order.factura || !order.factura.emitida) {
+      return res.status(400).json({ error: 'Primero debes emitir la factura antes de enviarla' });
+    }
+
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'Falta configurar RESEND_API_KEY en el servidor' });
+    }
+
+    const resend = new Resend(apiKey);
+    const fromEmail = process.env.EMAIL_FROM || 'Editorial Aguilera <contacto@editorialaguilera.com.ar>';
+    const f = order.factura;
+    const nroCompFormat = `${String(f.puntoVenta).padStart(4, '0')}-${String(f.numeroComprobante).padStart(8, '0')}`;
+    const fechaEmisionStr = new Date(f.fechaEmision).toLocaleDateString('es-AR');
+    const totalFormatted = `$${order.total.toLocaleString('es-AR')}`;
+
+    const itemsHtml = order.items.map(item => `
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #eee;">${item.titulo} (${item.autor})</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: center;">${item.qty}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right;">$${item.precio.toLocaleString('es-AR')}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right;">$${(item.precio * item.qty).toLocaleString('es-AR')}</td>
+      </tr>
+    `).join('');
+
+    const invoiceHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; border: 2px solid #0d1b2a; border-radius: 8px; overflow: hidden; background: #ffffff;">
+        <!-- Header Fiscal -->
+        <div style="background-color: #0d1b2a; color: #ffffff; padding: 20px; text-align: center;">
+          <h2 style="margin: 0; color: #d4af37; font-size: 24px;">EDITORIAL AGUILERA</h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #ccc;">Editorial Jurídica Argentina · Hurlingham, Buenos Aires</p>
+        </div>
+
+        <div style="padding: 20px; color: #333;">
+          <!-- Tipo de Comprobante -->
+          <div style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 20px; background: #fdfdfd; display: flex; justify-content: space-between;">
+            <div>
+              <h3 style="margin: 0; color: #0d1b2a; font-size: 18px;">FACTURA "${f.letra}"</h3>
+              <p style="margin: 5px 0 0; font-size: 14px; font-weight: bold; color: #555;">N° ${nroCompFormat}</p>
+              <p style="margin: 3px 0 0; font-size: 12px; color: #777;">Fecha de Emisión: ${fechaEmisionStr}</p>
+            </div>
+            <div style="text-align: right;">
+              <p style="margin: 0; font-size: 13px;"><strong>CUIT:</strong> 30-71234567-8</p>
+              <p style="margin: 3px 0 0; font-size: 12px; color: #777;">Ingresos Brutos: Exento</p>
+              <p style="margin: 3px 0 0; font-size: 12px; color: #777;">IVA: Responsable Inscripto</p>
+            </div>
+          </div>
+
+          <!-- Datos Cliente -->
+          <div style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+            <p style="margin: 0 0 5px;"><strong>Cliente:</strong> ${order.cliente.nombre}</p>
+            <p style="margin: 0 0 5px;"><strong>Condición Frente al IVA:</strong> Consumidor Final</p>
+            <p style="margin: 0 0 5px;"><strong>Email:</strong> ${order.cliente.email}</p>
+            ${order.cliente.direccion ? `<p style="margin: 0;"><strong>Dirección:</strong> ${order.cliente.direccion}</p>` : ''}
+          </div>
+
+          <!-- Tabla de Items -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+              <tr style="background: #f4f4f4; text-align: left; font-size: 13px;">
+                <th style="padding: 10px 12px; border-bottom: 2px solid #ddd;">Descripción</th>
+                <th style="padding: 10px 12px; border-bottom: 2px solid #ddd; text-align: center;">Cant.</th>
+                <th style="padding: 10px 12px; border-bottom: 2px solid #ddd; text-align: right;">Precio Unit.</th>
+                <th style="padding: 10px 12px; border-bottom: 2px solid #ddd; text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody style="font-size: 13px;">
+              ${itemsHtml}
+            </tbody>
+          </table>
+
+          <!-- Total -->
+          <div style="text-align: right; margin-bottom: 25px; padding: 10px; background: #f9f9f9; border-radius: 6px;">
+            <span style="font-size: 16px; color: #555; margin-right: 15px;">TOTAL:</span>
+            <span style="font-size: 22px; font-weight: bold; color: #0d1b2a;">${totalFormatted}</span>
+          </div>
+
+          <!-- Pie Fiscal ARCA / CAE -->
+          <div style="border-top: 2px solid #0d1b2a; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; padding: 15px; border-radius: 6px;">
+            <div>
+              <p style="margin: 0; font-size: 13px; font-weight: bold; color: #0d1b2a;">
+                CAE N°: <span style="color: #2563eb;">${f.cae}</span>
+              </p>
+              <p style="margin: 4px 0 0; font-size: 12px; color: #666;">
+                Fecha de Vto. de CAE: <strong>${f.vencimientoCae}</strong>
+              </p>
+              <p style="margin: 4px 0 0; font-size: 11px; color: #888;">
+                Comprobante autorizado por ARCA (Agencia de Recaudación y Control Aduanero)
+              </p>
+            </div>
+            <div style="text-align: center;">
+              <a href="${f.qrUrl}" target="_blank" style="display: inline-block; padding: 6px 12px; background: #0d1b2a; color: #d4af37; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: bold;">
+                Verificar QR ARCA
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: fromEmail,
+      to: [order.cliente.email],
+      replyTo: 'contacto@editorialaguilera.com.ar',
+      subject: `🧾 Factura Electrónica N° ${nroCompFormat} - Editorial Aguilera`,
+      html: invoiceHtml,
+    });
+
+    order.factura.enviada = true;
+    order.factura.fechaEnvio = new Date();
+    await order.save();
+
+    console.log(`✉️ Factura enviada al cliente ${order.cliente.email} para orden #${order._id}`);
+    return res.json({ success: true, message: 'Factura enviada al cliente con éxito' });
+  } catch (error) {
+    console.error('❌ Error al enviar factura por email:', error);
+    return res.status(500).json({ error: `Error al enviar factura: ${error.message}` });
   }
 });
 
